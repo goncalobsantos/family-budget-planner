@@ -17,10 +17,14 @@ export async function listFiles(
 ): Promise<StoredFile[]> {
   if (isVercel) {
     const { blobs } = await list({ prefix: `${dir}/` });
+    const ext = dir === "csv" ? ".csv" : ".json";
     return blobs
+      .filter((blob) => {
+        const filename = blob.pathname.replace(`${dir}/`, "");
+        return filename.length > 0 && filename.endsWith(ext);
+      })
       .map((blob) => {
         const filename = blob.pathname.replace(`${dir}/`, "");
-        const ext = dir === "csv" ? ".csv" : ".json";
         return {
           name: filename.replace(ext, ""),
           filename,
