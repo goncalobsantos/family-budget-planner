@@ -940,7 +940,7 @@ export default function BudgetPlanner() {
 
       {/* Export button */}
       <motion.button
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: 1 }}
         whileTap={{ scale: 0.98 }}
         onClick={generatePlan}
         disabled={overBudget}
