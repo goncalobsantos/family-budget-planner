@@ -61,6 +61,9 @@ export default function BudgetPlanner() {
     nextMonthIncome.accountLeftovers.Main +
     nextMonthIncome.accountLeftovers.Coverflex;
   const totalIncome = incomeFromSources + totalLeftovers;
+  const savingsBase = nextMonthIncome.sources
+    .filter((src) => src.countsForSavings)
+    .reduce((s, src) => s + src.amount, 0) + totalLeftovers;
 
   // ── Scheduled transfers split ──
   const scheduledNeeds = scheduledTransfers.filter(
@@ -74,7 +77,7 @@ export default function BudgetPlanner() {
   const scheduledTotal = scheduledNeedsTotal + scheduledWantsTotal;
 
   // ── Savings ──
-  const savingsAmount = (totalIncome * savesPct) / 100;
+  const savingsAmount = (savingsBase * savesPct) / 100;
   const allocatedToGoals = savingsAllocations.reduce((s, a) => s + a.amount, 0);
   const unallocatedSavings = Math.max(0, savingsAmount - allocatedToGoals);
 

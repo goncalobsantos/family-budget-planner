@@ -47,7 +47,7 @@ export default function CategoryBreakdown() {
           Spending by Category
         </h2>
         <p className="text-[var(--text-muted)]">
-          Main account expenses · Total: €{total.toFixed(2)}
+          Where our money went · Total: €{total.toFixed(2)}
         </p>
       </div>
 

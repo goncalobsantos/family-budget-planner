@@ -6,8 +6,38 @@
     "category": "Software, aplicativos, jogos",
     "nws": "Needs",
     "isFixed": true,
-    "day": 25,
+    "day": 26,
     "type": "subscription"
+  },
+  {
+    "id": "barco-mary",
+    "name": "Barco Mary (CC)",
+    "amount": 599,
+    "category": "Presentes, alegrias",
+    "nws": "Wants",
+    "isFixed": false,
+    "day": 26,
+    "type": "bill"
+  },
+  {
+    "id": "temu-mary",
+    "name": "Temu Mary (CC)",
+    "amount": 105.68,
+    "category": "Presentes, alegrias",
+    "nws": "Wants",
+    "isFixed": false,
+    "day": 26,
+    "type": "bill"
+  },
+  {
+    "id": "uber-one",
+    "name": "Uber One (CC)",
+    "amount": 4.99,
+    "category": "Software, aplicativos, jogos",
+    "nws": "Wants",
+    "isFixed": false,
+    "day": 26,
+    "type": "bill"
   },
   {
     "id": "agua",
@@ -202,7 +232,7 @@
   {
     "id": "combustivel",
     "name": "Combustível",
-    "amount": 180.00,
+    "amount": 120.00,
     "category": "Combustível",
     "nws": "Needs",
     "isFixed": false,
@@ -212,7 +242,7 @@
   {
     "id": "laser",
     "name": "Laser",
-    "amount": 59.99,
+    "amount": 59.90,
     "category": "Cuidados pessoais",
     "nws": "Wants",
     "isFixed": true,

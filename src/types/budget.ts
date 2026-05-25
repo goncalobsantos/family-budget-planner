@@ -120,6 +120,7 @@ export interface IncomeSource {
   account: AccountType;
   isFixed: boolean;
   day: number; // day of the month income is received
+  countsForSavings: boolean; // whether this income counts towards the 20% savings target
 }
 
 export interface NextMonthIncome {

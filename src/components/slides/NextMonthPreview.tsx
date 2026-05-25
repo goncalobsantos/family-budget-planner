@@ -27,7 +27,10 @@ export default function NextMonthPreview() {
     (s, t) => s + t.amount,
     0
   );
-  const savingsAmount = (totalIncome + totalLeftovers) * 0.2;
+  const savingsBase = nextMonthIncome.sources
+    .filter((src) => src.countsForSavings)
+    .reduce((s, src) => s + src.amount, 0) + totalLeftovers;
+  const savingsAmount = savingsBase * 0.2;
   const disposable = totalIncome + totalLeftovers - totalScheduled - savingsAmount;
 
   // Sort transfers: dated ones by period order (day>=24 first), undated at end

@@ -119,15 +119,15 @@ export function getDailyBalances(records: WalletRecord[]): DailyBalance[] {
     }));
 }
 
-// ── Category Breakdown (Main account period expenses, excluding Ignore & Start) ──
+// ── Category Breakdown (all accounts, real spending only — excludes Ignore & Saves transfers) ──
 export function getCategoryBreakdown(
   records: WalletRecord[]
 ): CategoryTotal[] {
   const expenses = getPeriodRecords(records).filter(
     (r) =>
       r.type === "Despesa" &&
-      r.account === "Main" &&
-      r.nws !== "Ignore"
+      r.nws !== "Ignore" &&
+      r.nws !== "Saves"
   );
 
   const map = new Map<string, { total: number; records: WalletRecord[] }>();
@@ -148,7 +148,7 @@ export function getCategoryBreakdown(
     .sort((a, b) => b.total - a.total);
 }
 
-// ── Extra Info Breakdown (period expenses with extra info, excluding Ignore, Start, project-specific) ──
+// ── Extra Info Breakdown (all accounts, real spending with extra info — excludes Ignore, Saves, project-specific) ──
 export function getExtraInfoBreakdown(
   records: WalletRecord[]
 ): CategoryTotal[] {
@@ -162,6 +162,7 @@ export function getExtraInfoBreakdown(
     (r) =>
       r.type === "Despesa" &&
       r.nws !== "Ignore" &&
+      r.nws !== "Saves" &&
       r.extraInfo !== "" &&
       !projectExtraInfos.includes(r.extraInfo)
   );
@@ -264,7 +265,9 @@ export function getIncomeTotal(records: WalletRecord[]): number {
     getPeriodRecords(records)
       .filter(
         (r) =>
-          r.type === "Receita" && r.nws !== "Ignore"
+          r.type === "Receita" &&
+          r.nws !== "Ignore" &&
+          r.nws !== "Saves"
       )
       .reduce((sum, r) => sum + r.amount, 0) * 100
   ) / 100;
@@ -275,19 +278,23 @@ export function getExpenseTotal(records: WalletRecord[]): number {
     getPeriodRecords(records)
       .filter(
         (r) =>
-          r.type === "Despesa" && r.nws !== "Ignore"
+          r.type === "Despesa" &&
+          r.nws !== "Ignore" &&
+          r.nws !== "Saves"
       )
       .reduce((sum, r) => sum + r.amount, 0) * 100
   ) / 100;
 }
 
 // ── NWS Totals (for breakdown, period only) ──
+// Saves is computed as NET: savings sent out minus savings returned minus real TR expenses
 export function getNWSBreakdown(
   records: WalletRecord[]
 ): Record<string, number> {
-  const expenses = getPeriodRecords(records).filter(
-    (r) =>
-      r.type === "Despesa" && r.nws !== "Ignore"
+  const period = getPeriodRecords(records);
+
+  const expenses = period.filter(
+    (r) => r.type === "Despesa" && r.nws !== "Ignore"
   );
 
   const breakdown: Record<string, number> = {
@@ -297,10 +304,33 @@ export function getNWSBreakdown(
   };
 
   for (const r of expenses) {
-    if (r.nws in breakdown) {
-      breakdown[r.nws] += r.amount;
-    }
+    if (r.nws === "Needs") breakdown.Needs += r.amount;
+    else if (r.nws === "Wants") breakdown.Wants += r.amount;
   }
+
+  // Net savings = savings expenses from Main (sent to savings)
+  //             - savings income on Main (returned from savings)
+  //             - real expenses on TradeRepublic (spent directly from savings)
+  const savesOut = expenses
+    .filter((r) => r.nws === "Saves" && r.account === "Main")
+    .reduce((s, r) => s + r.amount, 0);
+
+  const savesReturned = period
+    .filter(
+      (r) =>
+        r.type === "Receita" &&
+        r.nws === "Saves" &&
+        r.account === "Main"
+    )
+    .reduce((s, r) => s + r.amount, 0);
+
+  const trRealExpenses = expenses
+    .filter(
+      (r) => r.account === "TradeRepublic" && r.nws !== "Saves"
+    )
+    .reduce((s, r) => s + r.amount, 0);
+
+  breakdown.Saves = savesOut - savesReturned - trRealExpenses;
 
   for (const key of Object.keys(breakdown)) {
     breakdown[key] = Math.round(breakdown[key] * 100) / 100;
