@@ -64,7 +64,10 @@ export async function readStoredFile(
     const { blobs } = await list({ prefix: `${dir}/${filename}` });
     const blob = blobs.find((b) => b.pathname === `${dir}/${filename}`);
     if (!blob) return null;
-    const res = await fetch(blob.url);
+    // Use downloadUrl for private blob stores
+    const url = blob.downloadUrl || blob.url;
+    const res = await fetch(url);
+    if (!res.ok) return null;
     return res.text();
   }
 

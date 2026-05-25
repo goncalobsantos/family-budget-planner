@@ -47,8 +47,11 @@ export default function ArchiveList({
     setLoadingFile(file.filename);
     try {
       const res = await fetch(`/api/archives/read?dir=csv&filename=${encodeURIComponent(file.filename)}`);
+      if (!res.ok) throw new Error("Failed to load CSV");
       const text = await res.text();
       onLoadCsv(text);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to load file");
     } finally {
       setLoadingFile(null);
     }
@@ -58,8 +61,11 @@ export default function ArchiveList({
     setLoadingFile(file.filename);
     try {
       const res = await fetch(`/api/archives/read?dir=budgets&filename=${encodeURIComponent(file.filename)}`);
+      if (!res.ok) throw new Error("Failed to load budget");
       const plan = await res.json();
       onLoadBudget(plan, file.name);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to load file");
     } finally {
       setLoadingFile(null);
     }
