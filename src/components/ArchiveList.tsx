@@ -46,7 +46,7 @@ export default function ArchiveList({
   const handleCsvClick = async (file: ArchiveFile) => {
     setLoadingFile(file.filename);
     try {
-      const res = await fetch(file.path);
+      const res = await fetch(`/api/archives/read?dir=csv&filename=${encodeURIComponent(file.filename)}`);
       const text = await res.text();
       onLoadCsv(text);
     } finally {
@@ -57,7 +57,7 @@ export default function ArchiveList({
   const handleBudgetClick = async (file: ArchiveFile) => {
     setLoadingFile(file.filename);
     try {
-      const res = await fetch(file.path);
+      const res = await fetch(`/api/archives/read?dir=budgets&filename=${encodeURIComponent(file.filename)}`);
       const plan = await res.json();
       onLoadBudget(plan, file.name);
     } finally {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { saveFile } from "@/lib/storage";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -18,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Sanitize filename — only allow alphanumeric, dots, hyphens, underscores
-  const sanitized = path.basename(filename).replace(/[^a-zA-Z0-9._-]/g, "");
+  const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, "");
   if (!sanitized) {
     return NextResponse.json(
       { error: "Invalid filename" },
@@ -27,17 +26,10 @@ export async function POST(req: NextRequest) {
   }
 
   const dir = type === "csv" ? "csv" : "budgets";
-  const targetDir = path.join(process.cwd(), "public", dir);
-
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
-  }
-
-  const filePath = path.join(targetDir, sanitized);
-  fs.writeFileSync(filePath, content, "utf-8");
+  const savedPath = await saveFile(dir, sanitized, content);
 
   return NextResponse.json({
     success: true,
-    path: `/${dir}/${sanitized}`,
+    path: savedPath,
   });
 }
