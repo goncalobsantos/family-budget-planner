@@ -67,7 +67,11 @@ export async function readStoredFile(
       if (!blob) {
         return { content: null, error: `Blob not found: ${dir}/${filename} (found ${blobs.length} blobs)` };
       }
-      const res = await fetch(blob.url);
+      const res = await fetch(blob.url, {
+        headers: {
+          Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`,
+        },
+      });
       if (!res.ok) {
         return { content: null, error: `Fetch failed: ${res.status} ${res.statusText} for ${blob.url}` };
       }
