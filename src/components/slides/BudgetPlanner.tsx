@@ -96,8 +96,8 @@ export default function BudgetPlanner() {
   // ── Grand totals ──
   const totalNeeds = scheduledNeedsTotal + flexibleNeedsTotal;
   const totalWants = scheduledWantsTotal + flexibleWantsTotal;
-  const needsPctOfIncome = totalIncome > 0 ? Math.round((totalNeeds / totalIncome) * 100) : 0;
-  const wantsPctOfIncome = totalIncome > 0 ? Math.round((totalWants / totalIncome) * 100) : 0;
+  const needsPctOfIncome = totalIncome > 0 ? Math.round((totalNeeds / totalIncome) * 10000) / 100 : 0;
+  const wantsPctOfIncome = totalIncome > 0 ? Math.round((totalWants / totalIncome) * 10000) / 100 : 0;
 
   // ── Budget health indicator ──
   const totalAllocated = totalNeeds + totalWants + savingsAmount;
@@ -132,7 +132,7 @@ export default function BudgetPlanner() {
       const maxSaves = totalIncome - scheduledTotal;
       const clamped = Math.min(val, maxSaves);
       const newPct = totalIncome > 0 ? (clamped / totalIncome) * 100 : 0;
-      setSavesPct(Math.round(newPct * 10) / 10);
+      setSavesPct(Math.round(newPct * 100) / 100);
     } else if (editingField.startsWith("sub-needs-")) {
       const subId = editingField.replace("sub-needs-", "");
       setFlexibleNeeds((prev) =>
@@ -283,7 +283,7 @@ export default function BudgetPlanner() {
       scheduledTotal,
       savings: {
         totalAmount: savingsAmount,
-        percentage: Math.round(savesPct),
+        percentage: Math.round(savesPct * 100) / 100,
         allocations: savingsAllocations,
         unallocated: unallocatedSavings,
       },
@@ -301,7 +301,7 @@ export default function BudgetPlanner() {
       allocations: {
         needs: { percentage: needsPctOfIncome, amount: totalNeeds },
         wants: { percentage: wantsPctOfIncome, amount: totalWants },
-        saves: { percentage: Math.round(savesPct), amount: savingsAmount },
+        saves: { percentage: Math.round(savesPct * 100) / 100, amount: savingsAmount },
       },
       disposableIncome: flexibleTotal,
       categoryBreakdown: {
@@ -439,7 +439,7 @@ export default function BudgetPlanner() {
             </span>
           </div>
           <span className="text-xs text-[var(--text-muted)]">
-            {Math.round(savesPct)}% saves · {needsPctOfIncome}% needs · {wantsPctOfIncome}% wants
+            {savesPct.toFixed(2)}% saves · {needsPctOfIncome.toFixed(2)}% needs · {wantsPctOfIncome.toFixed(2)}% wants
           </span>
         </div>
         <div className="h-3 rounded-full bg-[var(--bg-tertiary)] overflow-hidden flex">
