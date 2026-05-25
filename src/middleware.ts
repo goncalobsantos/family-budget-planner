@@ -12,14 +12,20 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get("session")?.value;
+  try {
+    const token = req.cookies.get("session")?.value;
 
-  if (!token || !(await verifySession(token))) {
-    // For API routes, return 401
-    if (pathname.startsWith("/api")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!token || !(await verifySession(token))) {
+      // For API routes, return 401
+      if (pathname.startsWith("/api")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      // For pages, redirect to login
+      const loginUrl = new URL("/login", req.url);
+      return NextResponse.redirect(loginUrl);
     }
-    // For pages, redirect to login
+  } catch {
+    // If session verification fails, redirect to login
     const loginUrl = new URL("/login", req.url);
     return NextResponse.redirect(loginUrl);
   }

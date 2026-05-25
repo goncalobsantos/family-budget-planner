@@ -20,50 +20,58 @@ function isRateLimited(ip: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown";
+  try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
 
-  if (isRateLimited(ip)) {
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: "Too many attempts. Try again later." },
+        { status: 429 }
+      );
+    }
+
+    const body = await req.json();
+    const { password } = body as { password: string };
+
+    if (!password || typeof password !== "string") {
+      return NextResponse.json(
+        { error: "Password required" },
+        { status: 400 }
+      );
+    }
+
+    const valid = await verifyPassword(password);
+
+    if (!valid) {
+      return NextResponse.json(
+        { error: "Invalid password" },
+        { status: 401 }
+      );
+    }
+
+    // Reset rate limit on success
+    attempts.delete(ip);
+
+    const token = await createSession();
+
+    const response = NextResponse.json({ success: true });
+    response.cookies.set("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+    });
+
+    return response;
+  } catch (e) {
+    console.error("Login error:", e);
     return NextResponse.json(
-      { error: "Too many attempts. Try again later." },
-      { status: 429 }
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
-
-  const body = await req.json();
-  const { password } = body as { password: string };
-
-  if (!password || typeof password !== "string") {
-    return NextResponse.json(
-      { error: "Password required" },
-      { status: 400 }
-    );
-  }
-
-  const valid = await verifyPassword(password);
-
-  if (!valid) {
-    return NextResponse.json(
-      { error: "Invalid password" },
-      { status: 401 }
-    );
-  }
-
-  // Reset rate limit on success
-  attempts.delete(ip);
-
-  const token = await createSession();
-
-  const response = NextResponse.json({ success: true });
-  response.cookies.set("session", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60, // 7 days
-    path: "/",
-  });
-
-  return response;
 }

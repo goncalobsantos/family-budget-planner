@@ -3,7 +3,7 @@ import { SignJWT, jwtVerify } from "jose";
 const SALT = "family-budget-salt-v1";
 const VALID_HASHES = [
   "84fdeca8af0916d70351027f2ac381687b404330c6f2c809c2ded5663928a28f",
-  "295d841e0ba80043b5ac1fb2d53789db0786e2b5254004a46b9f221b8573eaac",
+  "b8b22ca6d028935bced015d19ef877bf459be2074242bbf9a6e619a4ca7154e3",
 ];
 
 function getJwtSecret(): Uint8Array {
