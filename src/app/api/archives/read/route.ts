@@ -19,14 +19,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
   }
 
-  const content = await readStoredFile(dir, sanitized);
+  const result = await readStoredFile(dir, sanitized);
 
-  if (content === null) {
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
+  if (result.content === null) {
+    return NextResponse.json(
+      { error: result.error || "File not found" },
+      { status: 404 }
+    );
   }
 
   const contentType = dir === "csv" ? "text/csv" : "application/json";
-  return new NextResponse(content, {
+  return new NextResponse(result.content, {
     headers: { "Content-Type": contentType },
   });
 }

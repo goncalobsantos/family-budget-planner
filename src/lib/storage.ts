@@ -59,21 +59,28 @@ export async function listFiles(
 export async function readStoredFile(
   dir: "csv" | "budgets",
   filename: string
-): Promise<string | null> {
+): Promise<{ content: string | null; error?: string }> {
   if (isVercel) {
-    const { blobs } = await list({ prefix: `${dir}/${filename}` });
-    const blob = blobs.find((b) => b.pathname === `${dir}/${filename}`);
-    if (!blob) return null;
-    // Use downloadUrl for private blob stores
-    const url = blob.downloadUrl || blob.url;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return res.text();
+    try {
+      const { blobs } = await list({ prefix: `${dir}/${filename}` });
+      const blob = blobs.find((b) => b.pathname === `${dir}/${filename}`);
+      if (!blob) {
+        return { content: null, error: `Blob not found: ${dir}/${filename} (found ${blobs.length} blobs)` };
+      }
+      const res = await fetch(blob.url);
+      if (!res.ok) {
+        return { content: null, error: `Fetch failed: ${res.status} ${res.statusText} for ${blob.url}` };
+      }
+      const text = await res.text();
+      return { content: text };
+    } catch (e) {
+      return { content: null, error: `Exception: ${e instanceof Error ? e.message : String(e)}` };
+    }
   }
 
   const filePath = path.join(process.cwd(), "public", dir, filename);
-  if (!fs.existsSync(filePath)) return null;
-  return fs.readFileSync(filePath, "utf-8");
+  if (!fs.existsSync(filePath)) return { content: null, error: "Local file not found" };
+  return { content: fs.readFileSync(filePath, "utf-8") };
 }
 
 // ── Save/upload a file ──

@@ -47,7 +47,10 @@ export default function ArchiveList({
     setLoadingFile(file.filename);
     try {
       const res = await fetch(`/api/archives/read?dir=csv&filename=${encodeURIComponent(file.filename)}`);
-      if (!res.ok) throw new Error("Failed to load CSV");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(err.error || `Failed (${res.status})`);
+      }
       const text = await res.text();
       onLoadCsv(text);
     } catch (e) {
