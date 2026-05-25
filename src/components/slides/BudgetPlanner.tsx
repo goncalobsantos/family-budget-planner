@@ -131,8 +131,8 @@ export default function BudgetPlanner() {
     if (editingField === "saves") {
       const maxSaves = totalIncome - scheduledTotal;
       const clamped = Math.min(val, maxSaves);
-      const newPct = totalIncome > 0 ? (clamped / totalIncome) * 100 : 0;
-      setSavesPct(Math.round(newPct * 100) / 100);
+      const newPct = savingsBase > 0 ? (clamped / savingsBase) * 100 : 0;
+      setSavesPct(newPct);
     } else if (editingField.startsWith("sub-needs-")) {
       const subId = editingField.replace("sub-needs-", "");
       setFlexibleNeeds((prev) =>
@@ -471,19 +471,19 @@ export default function BudgetPlanner() {
       <div className="grid grid-cols-4 gap-3">
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
           <p className="text-xs text-[var(--text-muted)]">Income</p>
-          <p className="text-lg font-bold text-[var(--income)]">€{totalIncome.toFixed(0)}</p>
+          <p className="text-lg font-bold text-[var(--income)]">€{totalIncome.toFixed(2)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
           <p className="text-xs text-[var(--text-muted)]">Committed</p>
-          <p className="text-lg font-bold text-[var(--expense)]">€{scheduledTotal.toFixed(0)}</p>
+          <p className="text-lg font-bold text-[var(--expense)]">€{scheduledTotal.toFixed(2)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
           <p className="text-xs text-[var(--text-muted)]">Savings</p>
-          <p className="text-lg font-bold text-[var(--saves-color)]">€{savingsAmount.toFixed(0)}</p>
+          <p className="text-lg font-bold text-[var(--saves-color)]">€{savingsAmount.toFixed(2)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
           <p className="text-xs text-[var(--text-muted)]">Flexible</p>
-          <p className="text-lg font-bold text-[var(--accent-primary)]">€{flexibleTotal.toFixed(0)}</p>
+          <p className="text-lg font-bold text-[var(--accent-primary)]">€{flexibleTotal.toFixed(2)}</p>
         </div>
       </div>
 
@@ -492,7 +492,7 @@ export default function BudgetPlanner() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <PiggyBank size={18} className="text-[var(--saves-color)]" />
-            <h3 className="font-medium text-[var(--saves-color)]">Savings — {Math.round(savesPct)}%</h3>
+            <h3 className="font-medium text-[var(--saves-color)]">Savings — {savesPct.toFixed(2)}%</h3>
           </div>
           <EditableAmount field="saves" amount={savingsAmount} color="var(--saves-color)" />
         </div>
@@ -500,9 +500,9 @@ export default function BudgetPlanner() {
           type="range"
           min={0}
           max={50}
-          step={1}
+          step={0.01}
           value={savesPct}
-          onChange={(e) => setSavesPct(parseInt(e.target.value))}
+          onChange={(e) => setSavesPct(parseFloat(e.target.value))}
           className="w-full h-2 rounded-full appearance-none cursor-pointer"
           style={{
             background: `linear-gradient(to right, var(--saves-color) 0%, var(--saves-color) ${(savesPct / 50) * 100}%, var(--bg-tertiary) ${(savesPct / 50) * 100}%, var(--bg-tertiary) 100%)`,
