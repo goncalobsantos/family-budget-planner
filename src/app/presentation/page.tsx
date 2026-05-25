@@ -1,0 +1,176 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useBudget } from "@/context/BudgetContext";
+import SlidePresentation from "@/components/SlidePresentation";
+import OpeningBalances from "@/components/slides/OpeningBalances";
+import MoneyFlow from "@/components/slides/MoneyFlow";
+import CategoryBreakdown from "@/components/slides/CategoryBreakdown";
+import ExtraInfoBreakdown from "@/components/slides/ExtraInfoBreakdown";
+import ProjectMonthly from "@/components/slides/ProjectMonthly";
+import ProjectsYearOverview from "@/components/slides/ProjectsYearOverview";
+import NextMonthPreview from "@/components/slides/NextMonthPreview";
+import BudgetPlanner from "@/components/slides/BudgetPlanner";
+import DebtsAndGoals from "@/components/slides/DebtsAndGoals";
+import BudgetAnalysisSlide from "@/components/slides/BudgetAnalysisSlide";
+import { buildBudgetAnalysis } from "@/lib/budget-analysis";
+import { Archive, Check } from "lucide-react";
+import type { BudgetPlan, BudgetAnalysis } from "@/types/budget";
+
+export default function PresentationPage() {
+  const { data, csvText } = useBudget();
+  const router = useRouter();
+  const [archiveSaved, setArchiveSaved] = useState(false);
+  const [archiveSaving, setArchiveSaving] = useState(false);
+  const [budgetAnalysis, setBudgetAnalysis] = useState<BudgetAnalysis | null>(null);
+
+  useEffect(() => {
+    if (!data) {
+      router.replace("/");
+    }
+  }, [data, router]);
+
+  // Try to load a budget plan for the current CSV period (prior month plan)
+  useEffect(() => {
+    if (!data) return;
+
+    async function loadPriorBudgetPlan() {
+      try {
+        // The CSV's date range tells us which month we're analyzing
+        const csvMonth = data!.dateRange.start.slice(0, 7); // YYYY-MM
+
+        // Fetch list of available budget plans
+        const res = await fetch("/api/archives");
+        if (!res.ok) return;
+        const { budgetFiles } = await res.json();
+
+        // Look for a budget plan that matches this CSV's month
+        const matchingPlan = budgetFiles.find(
+          (f: { name: string }) => f.name === csvMonth
+        );
+
+        if (!matchingPlan) return;
+
+        // Fetch the actual plan file
+        const planRes = await fetch(matchingPlan.path);
+        if (!planRes.ok) return;
+        const plan: BudgetPlan = await planRes.json();
+
+        // Build the analysis
+        const analysis = buildBudgetAnalysis(plan, data!.records, data!.dateRange);
+        setBudgetAnalysis(analysis);
+      } catch {
+        // Silently fail — no prior budget plan is fine
+      }
+    }
+
+    loadPriorBudgetPlan();
+  }, [data]);
+
+  const saveToArchive = useCallback(async () => {
+    if (!csvText || !data) return;
+    setArchiveSaving(true);
+    try {
+      // Derive filename from date range
+      const month = data.dateRange.start.slice(0, 7);
+      const filename = `${month}.csv`;
+      await fetch("/api/archives/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: csvText, filename, type: "csv" }),
+      });
+      setArchiveSaved(true);
+    } finally {
+      setArchiveSaving(false);
+    }
+  }, [csvText, data]);
+
+  if (!data) return null;
+
+  const slideLabels = [
+    { short: "Balances", icon: "🏦" },
+    { short: "Money Flow", icon: "💸" },
+    { short: "Categories", icon: "📊" },
+    { short: "Extra Info", icon: "📋" },
+    { short: "LabStories", icon: "🧪" },
+    { short: "Dwellin'", icon: "🏠" },
+    { short: "Year Overview", icon: "📅" },
+    ...(budgetAnalysis ? [{ short: "Budget vs Actual", icon: "🎯" }] : []),
+    { short: "Next Month", icon: "⏭️" },
+    { short: "Planner", icon: "✏️" },
+    { short: "Debts & Goals", icon: "🎯" },
+  ];
+
+  return (
+    <>
+      {/* Archive button */}
+      {csvText && (
+        <button
+          onClick={saveToArchive}
+          disabled={archiveSaved || archiveSaving}
+          className={`fixed top-4 right-4 z-40 flex items-center gap-2 px-4 py-2 rounded-xl
+                     text-sm font-medium transition-all duration-200
+                     ${
+                       archiveSaved
+                         ? "bg-[var(--income)]/20 text-[var(--income)] border border-[var(--income)]/30"
+                         : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
+                     }`}
+        >
+          {archiveSaved ? (
+            <>
+              <Check size={16} />
+              Archived
+            </>
+          ) : (
+            <>
+              <Archive size={16} />
+              {archiveSaving ? "Saving…" : "Save to Archive"}
+            </>
+          )}
+        </button>
+      )}
+
+      <SlidePresentation labels={slideLabels}>
+      {/* Slide 1: Opening Balances */}
+      <OpeningBalances />
+
+      {/* Slide 2: Money Flow */}
+      <MoneyFlow />
+
+      {/* Slide 3: Category Breakdown */}
+      <CategoryBreakdown />
+
+      {/* Slide 4: Extra Info Breakdown */}
+      <ExtraInfoBreakdown />
+
+      {/* Slide 5: LabStories Monthly */}
+      <ProjectMonthly
+        project={data.projects.labstories}
+        accentColor="var(--accent-primary)"
+      />
+
+      {/* Slide 6: Dwellin' Monthly */}
+      <ProjectMonthly
+        project={data.projects.dwellin}
+        accentColor="var(--accent-secondary)"
+      />
+
+      {/* Slide 7: Projects Year Overview */}
+      <ProjectsYearOverview />
+
+      {/* Slide 8: Budget Analysis (if prior budget plan exists) */}
+      {budgetAnalysis && <BudgetAnalysisSlide analysis={budgetAnalysis} />}
+
+      {/* Slide 9: Next Month Preview */}
+      <NextMonthPreview />
+
+      {/* Slide 9: Budget Planner */}
+      <BudgetPlanner />
+
+      {/* Slide 10: Debts & Goals */}
+      <DebtsAndGoals />
+    </SlidePresentation>
+    </>
+  );
+}

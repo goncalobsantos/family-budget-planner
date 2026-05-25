@@ -1,0 +1,232 @@
+[
+  {
+    "id": "google-workspace",
+    "name": "Google Workspace",
+    "amount": 8.10,
+    "category": "Software, aplicativos, jogos",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 25,
+    "type": "subscription"
+  },
+  {
+    "id": "agua",
+    "name": "Água",
+    "amount": 39.28,
+    "category": "Energia, utilidades",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 29,
+    "type": "bill"
+  },
+  {
+    "id": "gas",
+    "name": "Gás",
+    "amount": 18.30,
+    "category": "Energia, utilidades",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 29,
+    "type": "bill"
+  },
+  {
+    "id": "mortgage",
+    "name": "Prestação casa",
+    "amount": 912.90,
+    "category": "Hipoteca",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 30,
+    "type": "bill"
+  },
+  {
+    "id": "gym",
+    "name": "Ginásio",
+    "amount": 36.99,
+    "category": "Esporte ativo, fitness",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 2,
+    "type": "subscription"
+  },
+  {
+    "id": "prime",
+    "name": "Prime",
+    "amount": 4.99,
+    "category": "Software, aplicativos, jogos",
+    "nws": "Wants",
+    "isFixed": true,
+    "day": 4,
+    "type": "subscription"
+  },
+  {
+    "id": "internet",
+    "name": "MEO Net",
+    "amount": 84.68,
+    "category": "Internet",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 7,
+    "type": "bill"
+  },
+  {
+    "id": "condo",
+    "name": "Condomínio",
+    "amount": 49.04,
+    "category": "Serviços",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 7,
+    "type": "bill"
+  },
+  {
+    "id": "health-insurance",
+    "name": "Seguro saúde",
+    "amount": 16.38,
+    "category": "Seguros",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 7,
+    "type": "bill"
+  },
+  {
+    "id": "electricity",
+    "name": "Luz",
+    "amount": 40.00,
+    "category": "Energia, utilidades",
+    "nws": "Needs",
+    "isFixed": false,
+    "day": 9,
+    "type": "bill"
+  },
+  {
+    "id": "icloud",
+    "name": "iCloud",
+    "amount": 9.99,
+    "category": "Software, aplicativos, jogos",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 10,
+    "type": "subscription"
+  },
+  {
+    "id": "adobe",
+    "name": "Adobe",
+    "amount": 12.18,
+    "category": "Software, aplicativos, jogos",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 12,
+    "type": "subscription"
+  },
+  {
+    "id": "car-loan",
+    "name": "Crédito carro",
+    "amount": 167.03,
+    "category": "Despesas financeiras",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 15,
+    "type": "bill"
+  },
+  {
+    "id": "capcut",
+    "name": "CapCut",
+    "amount": 11.99,
+    "category": "Software, aplicativos, jogos",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 18,
+    "type": "subscription"
+  },
+  {
+    "id": "home-insurance",
+    "name": "Seguro casa",
+    "amount": 21.19,
+    "category": "Seguro de propriedade",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 20,
+    "type": "bill"
+  },
+  {
+    "id": "life-insurance",
+    "name": "Seguro vida",
+    "amount": 22.68,
+    "category": "Seguros",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 21,
+    "type": "bill"
+  },
+  {
+    "id": "canva",
+    "name": "Canva",
+    "amount": 16.00,
+    "category": "Software, aplicativos, jogos",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 23,
+    "type": "subscription"
+  },
+  {
+    "id": "unhas",
+    "name": "Unhas",
+    "amount": 30.00,
+    "category": "Cuidados pessoais",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 0,
+    "type": "variable"
+  },
+  {
+    "id": "barbeiro",
+    "name": "Barbeiro",
+    "amount": 30.00,
+    "category": "Cuidados pessoais",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 0,
+    "type": "variable"
+  },
+  {
+    "id": "via-verde",
+    "name": "Via Verde",
+    "amount": 45.00,
+    "category": "Via verde",
+    "nws": "Needs",
+    "isFixed": false,
+    "day": 0,
+    "type": "variable"
+  },
+  {
+    "id": "combustivel",
+    "name": "Combustível",
+    "amount": 180.00,
+    "category": "Combustível",
+    "nws": "Needs",
+    "isFixed": false,
+    "day": 0,
+    "type": "variable"
+  },
+  {
+    "id": "laser",
+    "name": "Laser",
+    "amount": 59.99,
+    "category": "Cuidados pessoais",
+    "nws": "Wants",
+    "isFixed": true,
+    "day": 0,
+    "type": "variable"
+  },
+  {
+    "id": "mantimentos",
+    "name": "Mantimentos",
+    "amount": 300.00,
+    "category": "Mantimentos",
+    "nws": "Needs",
+    "isFixed": true,
+    "day": 0,
+    "type": "mantimentos"
+  }
+]

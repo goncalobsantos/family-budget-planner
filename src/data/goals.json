@@ -1,0 +1,65 @@
+[
+  {
+    "id": "emergency-fund",
+    "name": "Emergency Fund",
+    "description": "3 months of expenses as safety net",
+    "targetAmount": 5000,
+    "currentSaved": 0,
+    "deadline": "2026-12-31",
+    "icon": "Shield"
+  },
+  {
+    "id": "vacation-fund",
+    "name": "Vacation Fund",
+    "description": "Family vacation 2027",
+    "targetAmount": 3000,
+    "currentSaved": 0,
+    "deadline": "2026-09-30",
+    "icon": "Plane"
+  },
+  {
+    "id": "new-camera",
+    "name": "New Camera Fund",
+    "description": "Buy Sony Alpha 7 IV",
+    "targetAmount": 2000,
+    "currentSaved": 0,
+    "deadline": "2027-03-31",
+    "icon": "Camera"
+  },
+  {
+    "id": "new-rig",
+    "name": "New Rig Fund",
+    "description": "Buy the Newer Rig for better video production",
+    "targetAmount": 70,
+    "currentSaved": 0,
+    "deadline": "2026-08-31",
+    "icon": "Camera"
+  },
+  {
+    "id": "new-tripod",
+    "name": "New Tripod Fund",
+    "description": "Upgrade to a newer tripod for better video production",
+    "targetAmount": 25,
+    "currentSaved": 0,
+    "deadline": "2028-12-31",
+    "icon": "Shield"
+  },
+  {
+    "id": "new-ssd",
+    "name": "New SSD Fund",
+    "description": "SSD Sandisk Extreme Pro 2TB for faster video editing on the go",
+    "targetAmount": 200,
+    "currentSaved": 0,
+    "deadline": "2028-12-31",
+    "icon": "Storage"
+  },
+  {
+    "id": "new-phone-light",
+    "name": "New Light Fund",
+    "description": "Upgrade to a newer light for phone",
+    "targetAmount": 25,
+    "currentSaved": 0,
+    "deadline": "2028-12-31",
+    "icon": "Light"
+  }
+]

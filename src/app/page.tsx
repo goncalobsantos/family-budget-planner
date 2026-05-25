@@ -1,65 +1,204 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useCallback, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Upload, FileSpreadsheet, ArrowRight, AlertCircle } from "lucide-react";
+import { useBudget } from "@/context/BudgetContext";
+import ArchiveList from "@/components/ArchiveList";
+import BudgetPlanViewer from "@/components/BudgetPlanViewer";
+import type { BudgetPlan } from "@/types/budget";
+
+export default function UploadPage() {
+  const router = useRouter();
+  const { loadCsv, data, error } = useBudget();
+  const [isDragging, setIsDragging] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [budgetPlan, setBudgetPlan] = useState<{
+    plan: BudgetPlan;
+    name: string;
+  } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = useCallback(
+    (file: File) => {
+      if (!file.name.endsWith(".csv")) {
+        return;
+      }
+      setFileName(file.name);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        loadCsv(text);
+      };
+      reader.readAsText(file);
+    },
+    [loadCsv]
+  );
+
+  const onDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    },
+    [handleFile]
+  );
+
+  const onFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) handleFile(file);
+    },
+    [handleFile]
+  );
+
+  const handleArchiveCsvLoad = useCallback(
+    (csvText: string) => {
+      loadCsv(csvText);
+      setFileName("Archive");
+      router.push("/presentation");
+    },
+    [loadCsv, router]
+  );
+
+  const handleBudgetLoad = useCallback(
+    (plan: object, name: string) => {
+      setBudgetPlan({ plan: plan as BudgetPlan, name });
+    },
+    []
+  );
+
+  // If viewing a budget plan, show the viewer
+  if (budgetPlan) {
+    return (
+      <BudgetPlanViewer
+        plan={budgetPlan.plan}
+        name={budgetPlan.name}
+        onBack={() => setBudgetPlan(null)}
+      />
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen flex items-center justify-center p-8">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-xl"
+      >
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-3">
+            Family Budget
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-[var(--text-muted)] text-lg">
+            Upload your monthly Wallet CSV or browse past analyses
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Drop zone */}
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={onDrop}
+          onClick={() => fileRef.current?.click()}
+          className={`
+            relative cursor-pointer rounded-2xl border-2 border-dashed p-12
+            transition-all duration-300 text-center
+            ${
+              isDragging
+                ? "border-[var(--accent-primary)] bg-[var(--accent-primary)]/10"
+                : data
+                  ? "border-[var(--income)] bg-[var(--income)]/5"
+                  : "border-[var(--border)] bg-[var(--bg-secondary)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-tertiary)]"
+            }
+          `}
+        >
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv"
+            onChange={onFileChange}
+            className="hidden"
+          />
+
+          {data ? (
+            <div className="space-y-3">
+              <FileSpreadsheet
+                size={48}
+                className="mx-auto text-[var(--income)]"
+              />
+              <p className="text-[var(--text-primary)] font-medium text-lg">
+                {fileName}
+              </p>
+              <p className="text-[var(--text-muted)] text-sm">
+                {data.records.length} records loaded ·{" "}
+                {new Date(data.dateRange.start).toLocaleDateString("pt-PT")} —{" "}
+                {new Date(data.dateRange.end).toLocaleDateString("pt-PT")}
+              </p>
+              <p className="text-xs text-[var(--text-muted)]">
+                Click to upload a different file
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Upload
+                size={48}
+                className={`mx-auto ${isDragging ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]"}`}
+              />
+              <p className="text-[var(--text-primary)] font-medium">
+                Drop your CSV file here
+              </p>
+              <p className="text-[var(--text-muted)] text-sm">
+                or click to browse
+              </p>
+            </div>
+          )}
         </div>
-      </main>
+
+        {/* Error */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 p-4 rounded-xl bg-[var(--expense)]/10 border border-[var(--expense)]/30
+                       flex items-start gap-3"
+          >
+            <AlertCircle size={20} className="text-[var(--expense)] flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-[var(--expense)]">{error}</p>
+          </motion.div>
+        )}
+
+        {/* Continue button */}
+        {data && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            onClick={() => router.push("/presentation")}
+            className="mt-6 w-full py-4 px-6 rounded-xl font-medium text-lg
+                       bg-[var(--accent-primary)] hover:bg-[var(--accent-secondary)]
+                       text-white transition-colors duration-200
+                       flex items-center justify-center gap-3"
+          >
+            Start Presentation
+            <ArrowRight size={20} />
+          </motion.button>
+        )}
+
+        {/* Archive section */}
+        <div className="mt-10">
+          <ArchiveList
+            onLoadCsv={handleArchiveCsvLoad}
+            onLoadBudget={handleBudgetLoad}
+          />
+        </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,0 +1,41 @@
+{
+  "sources": [
+    {
+      "id": "salary-g",
+      "name": "Salário G (CTW)",
+      "amount": 1711.53,
+      "account": "Main",
+      "isFixed": true,
+      "day": 25
+    },
+    {
+      "id": "salary-mi-copa",
+      "name": "Salário Mi",
+      "amount": 1077.94,
+      "account": "Main",
+      "isFixed": false,
+      "day": 1
+    },
+    {
+      "id": "salary-mi-sofia",
+      "name": "Ajudas de custo Mi",
+      "amount": 0.00,
+      "account": "Main",
+      "isFixed": false,
+      "day": 1
+    },
+    {
+      "id": "coverflex",
+      "name": "Coverflex (meal allowance)",
+      "amount": 198.74,
+      "account": "Meal",
+      "isFixed": true,
+      "day": 25
+    }
+  ],
+  "accountLeftovers": {
+    "Main": 0,
+    "Coverflex": 0,
+    "Savings": 372.10
+  }
+}
