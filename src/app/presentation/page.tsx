@@ -18,6 +18,7 @@ import { buildBudgetAnalysis } from "@/lib/budget-analysis";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Archive, Check } from "lucide-react";
+import SaveArchiveModal from "@/components/SaveArchiveModal";
 import type { BudgetPlan, BudgetAnalysis } from "@/types/budget";
 
 export default function PresentationPage() {
@@ -27,6 +28,7 @@ export default function PresentationPage() {
   const [archiveSaved, setArchiveSaved] = useState(false);
   const [archiveSaving, setArchiveSaving] = useState(false);
   const [budgetAnalysis, setBudgetAnalysis] = useState<BudgetAnalysis | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   useEffect(() => {
     if (!data) {
@@ -71,19 +73,17 @@ export default function PresentationPage() {
     loadPriorBudgetPlan();
   }, [data]);
 
-  const saveToArchive = useCallback(async () => {
+  const saveToArchive = useCallback(async (filename: string) => {
     if (!csvText || !data) return;
     setArchiveSaving(true);
     try {
-      // Derive filename from date range
-      const month = data.dateRange.start.slice(0, 7);
-      const filename = `${month}.csv`;
       await fetch("/api/archives/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: csvText, filename, type: "csv" }),
       });
       setArchiveSaved(true);
+      setShowSaveModal(false);
     } finally {
       setArchiveSaving(false);
     }
@@ -106,19 +106,21 @@ export default function PresentationPage() {
   ];
 
   const mobileArchiveBtn = csvText ? (
-    <button
-      onClick={saveToArchive}
-      disabled={archiveSaved || archiveSaving}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all
-        ${archiveSaved
-          ? "text-[var(--income)]"
-          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-        }`}
-      aria-label={archiveSaved ? t("presentation.archived") : t("presentation.saveToArchive")}
-    >
-      {archiveSaved ? <Check size={14} /> : <Archive size={14} />}
-      <span>{archiveSaved ? "✓" : archiveSaving ? "…" : t("presentation.save")}</span>
-    </button>
+    <div className="relative">
+      <button
+        onClick={() => setShowSaveModal(true)}
+        disabled={archiveSaved || archiveSaving}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all
+          ${archiveSaved
+            ? "text-[var(--income)] bg-[var(--income)]/10"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
+          }`}
+        aria-label={archiveSaved ? t("presentation.archived") : t("presentation.saveToArchive")}
+      >
+        {archiveSaved ? <Check size={14} /> : <Archive size={14} />}
+        <span>{archiveSaved ? t("presentation.archived") : archiveSaving ? "…" : t("presentation.save")}</span>
+      </button>
+    </div>
   ) : undefined;
 
   return (
@@ -130,7 +132,7 @@ export default function PresentationPage() {
         </div>
         {csvText && (
           <button
-            onClick={saveToArchive}
+            onClick={() => setShowSaveModal(true)}
             disabled={archiveSaved || archiveSaving}
             className={`pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-xl
                        text-sm font-medium transition-all duration-200
@@ -195,6 +197,18 @@ export default function PresentationPage() {
       {/* Slide 10: Debts & Goals */}
       <DebtsAndGoals />
     </SlidePresentation>
+
+      {showSaveModal && data && (
+        <SaveArchiveModal
+          dateRange={data.dateRange}
+          recordCount={data.records.length}
+          incomeTotal={data.records.filter(r => r.amount > 0).reduce((sum, r) => sum + r.amount, 0)}
+          expenseTotal={Math.abs(data.records.filter(r => r.amount < 0).reduce((sum, r) => sum + r.amount, 0))}
+          onSave={saveToArchive}
+          onClose={() => setShowSaveModal(false)}
+          saving={archiveSaving}
+        />
+      )}
     </>
   );
 }

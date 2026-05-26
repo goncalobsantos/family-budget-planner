@@ -100,6 +100,17 @@ export default function SlidePresentation({
   );
 
   const [navOpen, setNavOpen] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
+
+  // Dismiss swipe hint after first navigation or after 5 seconds
+  useEffect(() => {
+    if (page > 0) setShowSwipeHint(false);
+  }, [page]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSwipeHint(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div
@@ -134,6 +145,29 @@ export default function SlidePresentation({
             </div>
           </motion.div>
         </AnimatePresence>
+
+        {/* Swipe hint - shown on first slide, fades out */}
+        <AnimatePresence>
+          {showSwipeHint && page === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ delay: 1, duration: 0.4 }}
+              className="sm:hidden absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none"
+            >
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-secondary)]/90 border border-[var(--border)]/50 backdrop-blur-sm">
+                <motion.div
+                  animate={{ x: [0, 8, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                >
+                  <ChevronRight size={14} className="text-[var(--accent-primary)]" />
+                </motion.div>
+                <span className="text-[11px] text-[var(--text-muted)]">{t("slide.swipeHint")}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Navigation arrows - hidden on small touch devices, swipe handles it */}
@@ -164,48 +198,46 @@ export default function SlidePresentation({
 
       {/* Bottom navigation bar */}
       <nav className="flex-shrink-0 z-20 bg-[var(--bg-primary)]/90 backdrop-blur-sm border-t border-[var(--border)]/30">
-        {/* Mobile: action / prev / slide menu / next */}
+        {/* Mobile: action / slide menu / next hint */}
         <div className="flex sm:hidden items-center justify-between py-2.5 px-3 safe-area-pb">
           {/* Left: action slot (e.g. save button) */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 min-w-[60px]">
             {mobileAction}
           </div>
 
-          {/* Center: prev + slide menu + next */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => paginate(-1)}
-              disabled={page === 0}
-              className="p-1.5 text-[var(--text-muted)] disabled:opacity-0 transition-opacity"
-              aria-label={t("slide.previousSlide")}
-            >
-              <ChevronLeft size={16} />
-            </button>
+          {/* Center: slide menu indicator */}
+          <button
+            onClick={() => setNavOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                       text-xs text-[var(--text-secondary)]
+                       hover:bg-[var(--bg-tertiary)] transition-colors"
+            aria-label={t("slide.slideMenu")}
+          >
+            <LayoutGrid size={12} />
+            <span className="font-medium">{page + 1} / {total}</span>
+          </button>
 
-            <button
-              onClick={() => setNavOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg
-                         text-xs text-[var(--text-secondary)]
-                         hover:bg-[var(--bg-tertiary)] transition-colors"
-              aria-label={t("slide.slideMenu")}
-            >
-              <LayoutGrid size={12} />
-              <span className="font-medium">{page + 1}/{total}</span>
-            </button>
-
-            <button
-              onClick={() => paginate(1)}
-              disabled={page >= total - 1}
-              className="p-1.5 text-[var(--text-muted)] disabled:opacity-0 transition-opacity"
-              aria-label={t("slide.nextSlide")}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-
-          {/* Right: language switcher */}
-          <div className="flex-shrink-0">
-            <LanguageSwitcher />
+          {/* Right: prev/next navigation */}
+          <div className="flex-shrink-0 min-w-[60px] flex justify-end items-center gap-1">
+            {page > 0 && (
+              <button
+                onClick={() => paginate(-1)}
+                className="p-1.5 text-[var(--text-muted)]"
+                aria-label={t("slide.previousSlide")}
+              >
+                <ChevronLeft size={16} />
+              </button>
+            )}
+            {page < total - 1 && (
+              <button
+                onClick={() => paginate(1)}
+                className="flex items-center gap-0.5 text-[11px] font-medium text-[var(--accent-primary)]"
+                aria-label={t("slide.nextSlide")}
+              >
+                <span>{t("slide.next")}</span>
+                <ChevronRight size={14} />
+              </button>
+            )}
           </div>
         </div>
 

@@ -2,8 +2,8 @@
 
 import { useCallback, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Upload, FileSpreadsheet, ArrowRight, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Upload, FileSpreadsheet, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { useBudget } from "@/context/BudgetContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import ArchiveList from "@/components/ArchiveList";
@@ -17,6 +17,7 @@ export default function UploadPage() {
   const { t, dateLocale } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [loadingArchive, setLoadingArchive] = useState(false);
   const [budgetPlan, setBudgetPlan] = useState<{
     plan: BudgetPlan;
     name: string;
@@ -59,9 +60,14 @@ export default function UploadPage() {
 
   const handleArchiveCsvLoad = useCallback(
     (csvText: string) => {
-      loadCsv(csvText);
-      setFileName("Archive");
-      router.push("/presentation");
+      setLoadingArchive(true);
+      // Small delay for the exit animation to play, then load and navigate
+      setTimeout(() => {
+        loadCsv(csvText);
+        setTimeout(() => {
+          router.push("/presentation");
+        }, 600);
+      }, 100);
     },
     [loadCsv, router]
   );
@@ -89,12 +95,34 @@ export default function UploadPage() {
       <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-40">
         <LanguageSwitcher />
       </div>
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-xl"
-      >
+      <AnimatePresence mode="wait">
+        {loadingArchive ? (
+          <motion.div
+            key="archive-loading"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="flex flex-col items-center gap-4"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+            >
+              <Loader2 size={32} className="text-[var(--accent-primary)]" />
+            </motion.div>
+            <p className="text-sm text-[var(--text-muted)]">
+              {t("archives.loadingAnalysis")}
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="main-content"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20, scale: 0.97 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="w-full max-w-xl"
+          >
         <div className="text-center mb-6 sm:mb-10">
           <h1 className="text-2xl sm:text-4xl font-bold text-[var(--text-primary)] mb-2 sm:mb-3">
             {t("common.familyBudget")}
@@ -206,7 +234,9 @@ export default function UploadPage() {
             onLoadBudget={handleBudgetLoad}
           />
         </div>
-      </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

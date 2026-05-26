@@ -1,6 +1,6 @@
 // ── Raw CSV Record ──
 export interface WalletRecord {
-  category: string;
+  category: Category;
   amount: number;
   type: "Receita" | "Despesa"; // Income | Expense
   note: string;
@@ -8,7 +8,7 @@ export interface WalletRecord {
   labels: string[];
   nws: NWSType;
   account: AccountType;
-  extraInfo: string;
+  extraInfo: PersonalCategory;
 }
 
 export type NWSType =
@@ -20,6 +20,86 @@ export type NWSType =
   | "Start";
 
 export type AccountType = "Main" | "Meal" | "TradeRepublic";
+
+// ── Categories ──
+
+/**
+ * Personal categories — user-defined groupings mapped to the CSV `Extra info` column.
+ * Used for budget planning, scheduled transfers, and spending analysis.
+ */
+export type PersonalCategory =
+  | "Despesas carro"
+  | "Despesas casa"
+  | "Serviços casa"
+  | "Bem estar"
+  | "Saúde"
+  | "Mantimentos"
+  | "Subscrições"
+  | "Amigos"
+  | "Família"
+  | "Church"
+  | "Dates"
+  | "Diversos"
+  | "Compras"
+  | "Compras Roupa"
+  | "Snacks Fora"
+  | "Pequeno almoço fora"
+  | "Comer fora"
+  | "Mandar vir comida"
+  | "McDonald's"
+  | "LabStories - Pagamentos Freelancers"
+  | "LabStories - Compras material"
+  | "Despesas Dwellin'"
+  | (string & {}); // allows new personal categories without breaking
+
+/**
+ * Wallet app categories — from the CSV `category` column.
+ * These are the bank/wallet application's native classification.
+ */
+export type Category =
+  | "Renda"
+  | "Salário, faturas"
+  | "Despesas financeiras"
+  | "Transferir, sacar"
+  | "Restaurante, fast-food"
+  | "Bar, café"
+  | "Mercadorias"
+  | "Hipoteca"
+  | "Combustível"
+  | "Eletrônicos, acessórios"
+  | "Presentes, alegrias"
+  | "Férias, viagens, hotéis"
+  | "Bem-estar, beleza"
+  | "Software, aplicativos, jogos"
+  | "Energia, utilidades"
+  | "Casa, jardim"
+  | "Cuidados de saúde, médico"
+  | "Seguros"
+  | "Internet"
+  | "Serviços"
+  | "Roupas e Calçados"
+  | "Cultura, eventos esportivos"
+  | "TV, Streaming"
+  | "Esporte ativo, fitness"
+  | "Joias, acessórios"
+  | "Livros, áudio, assinaturas"
+  | "Taxas, encargos"
+  | "Seguro de propriedade"
+  | "Passatempos"
+  | "Saúde"
+  | "Multas"
+  | "Uber eats"
+  | "Táxi"
+  | "Poupança"
+  | "Poupanças"
+  | "Juro"
+  | "Via verde"
+  | "Animais"
+  | "Sem categoria"
+  | (string & {}); // allows unknown wallet categories gracefully
+
+/** Transfer type for scheduled payments */
+export type ScheduledTransferType = "bill" | "subscription" | "variable" | "mantimentos";
 
 // ── Display name mapping ──
 export const ACCOUNT_DISPLAY_NAMES: Record<AccountType, string> = {
@@ -106,11 +186,11 @@ export interface ScheduledTransfer {
   id: string;
   name: string;
   amount: number;
-  category: string;
+  category: PersonalCategory;
   nws: "Needs" | "Wants" | "Saves";
   isFixed: boolean; // true = exact amount, false = estimate
   day: number; // day of the month the payment goes out (0 = no fixed date)
-  type: "bill" | "subscription" | "variable" | "mantimentos";
+  type: ScheduledTransferType;
 }
 
 export interface IncomeSource {

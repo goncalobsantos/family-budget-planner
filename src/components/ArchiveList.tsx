@@ -35,7 +35,7 @@ export default function ArchiveList({
   const [archives, setArchives] = useState<ArchiveData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingFile, setLoadingFile] = useState<string | null>(null);
-  const { t, dateLocale } = useLanguage();
+  const { t, dateLocale, language } = useLanguage();
 
   useEffect(() => {
     fetch("/api/archives")
@@ -92,8 +92,13 @@ export default function ArchiveList({
     return null;
   }
 
-  const formatMonth = (name: string) => {
-    // Try to parse YYYY-MM format
+  const getDisplayName = (name: string, filename: string) => {
+    // If it's a records_DDmonth-DDmonth filename, show simple title
+    const recordsMatch = filename.match(/^records_(\d{1,2})([a-z]+)-(\d{1,2})([a-z]+)\.csv$/i);
+    if (recordsMatch) {
+      return t("archives.financialAnalysis");
+    }
+    // Fallback: Try to parse YYYY-MM format
     const match = name.match(/(\d{4})-(\d{2})/);
     if (match) {
       const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1);
@@ -103,6 +108,40 @@ export default function ArchiveList({
       });
     }
     return name;
+  };
+
+  const getPeriodSubtitle = (filename: string) => {
+    const match = filename.match(/^records_(\d{1,2})([a-z]+)-(\d{1,2})([a-z]+)\.csv$/i);
+    if (!match) return null;
+    const [, startDay, startMonth, endDay, endMonth] = match;
+    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+    const monthsMap: Record<string, Record<string, string>> = {
+      pt: { january: "janeiro", february: "fevereiro", march: "março", april: "abril", may: "maio", june: "junho", july: "julho", august: "agosto", september: "setembro", october: "outubro", november: "novembro", december: "dezembro" },
+      "pt-BR": { january: "janeiro", february: "fevereiro", march: "março", april: "abril", may: "maio", june: "junho", july: "julho", august: "agosto", september: "setembro", october: "outubro", november: "novembro", december: "dezembro" },
+      es: { january: "enero", february: "febrero", march: "marzo", april: "abril", may: "mayo", june: "junio", july: "julio", august: "agosto", september: "septiembre", october: "octubre", november: "noviembre", december: "diciembre" },
+      fr: { january: "janvier", february: "février", march: "mars", april: "avril", may: "mai", june: "juin", july: "juillet", august: "août", september: "septembre", october: "octobre", november: "novembre", december: "décembre" },
+      ja: { january: "1月", february: "2月", march: "3月", april: "4月", may: "5月", june: "6月", july: "7月", august: "8月", september: "9月", october: "10月", november: "11月", december: "12月" },
+    };
+
+    const months = monthsMap[language];
+    if (months) {
+      const sm = months[startMonth.toLowerCase()] ?? startMonth;
+      const em = months[endMonth.toLowerCase()] ?? endMonth;
+      if (language === "ja") {
+        return `${sm}${startDay}日 — ${em}${endDay}日`;
+      }
+      if (language === "pt" || language === "pt-BR") {
+        return `${startDay} de ${sm} — ${endDay} de ${em}`;
+      }
+      if (language === "es") {
+        return `${startDay} de ${sm} — ${endDay} de ${em}`;
+      }
+      if (language === "fr") {
+        return `${startDay} ${sm} — ${endDay} ${em}`;
+      }
+    }
+    return `${startDay} ${capitalize(startMonth)} — ${endDay} ${capitalize(endMonth)}`;
   };
 
   return (
@@ -150,10 +189,10 @@ export default function ArchiveList({
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                    {formatMonth(file.name)}
+                    {getDisplayName(file.name, file.filename)}
                   </p>
                   <p className="text-xs text-[var(--text-muted)]">
-                    {file.filename}
+                    {getPeriodSubtitle(file.filename) ?? file.filename}
                   </p>
                 </div>
                 <Calendar size={14} className="text-[var(--text-muted)]" />
@@ -194,7 +233,7 @@ export default function ArchiveList({
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                    {formatMonth(file.name)}
+                    {getDisplayName(file.name, file.filename)}
                   </p>
                   <p className="text-xs text-[var(--text-muted)]">
                     {t("archives.budgetPlan")}

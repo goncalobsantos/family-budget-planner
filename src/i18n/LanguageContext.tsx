@@ -30,6 +30,10 @@ const LanguageContext = createContext<LanguageContextValue>({
 const DATE_LOCALES: Record<Language, string> = {
   pt: "pt-PT",
   en: "en-GB",
+  es: "es-ES",
+  fr: "fr-FR",
+  "pt-BR": "pt-BR",
+  ja: "ja-JP",
 };
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
