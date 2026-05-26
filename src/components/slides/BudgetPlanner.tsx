@@ -288,6 +288,15 @@ export default function BudgetPlanner() {
     const parts = month.split("-");
     const nextMonth = `${parseInt(parts[1]) === 12 ? parseInt(parts[0]) + 1 : parts[0]}-${String(parseInt(parts[1]) === 12 ? 1 : parseInt(parts[1]) + 1).padStart(2, "0")}`;
 
+    const monthNames = [
+      "january", "february", "march", "april", "may", "june",
+      "july", "august", "september", "october", "november", "december",
+    ];
+    const endMonthIdx = parseInt(parts[1]) - 1;
+    const nextMonthIdx = endMonthIdx === 11 ? 0 : endMonthIdx + 1;
+    const year = endMonthIdx === 11 ? parseInt(parts[0]) + 1 : parseInt(parts[0]);
+    const planFilename = `budget-plan-${year}-${monthNames[endMonthIdx]}-${monthNames[nextMonthIdx]}.json`;
+
     const plan: BudgetPlan = {
       version: 2,
       month: nextMonth,
@@ -349,7 +358,7 @@ export default function BudgetPlanner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content: JSON.stringify(plan, null, 2),
-          filename: `budget-plan-${nextMonth}.json`,
+          filename: planFilename,
           type: "budget",
         }),
       });
@@ -360,7 +369,7 @@ export default function BudgetPlanner() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `budget-plan-${nextMonth}.json`;
+      a.download = planFilename;
       a.click();
       URL.revokeObjectURL(url);
     } finally {

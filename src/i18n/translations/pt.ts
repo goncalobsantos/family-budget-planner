@@ -71,6 +71,7 @@ export const pt = {
   "presentation.menu": "Menu",
   "presentation.options": "Opções",
   "presentation.language": "Idioma",
+  "presentation.backToStart": "Voltar ao in\u00edcio",
 
   // Slide navigation
   "slide.previousSlide": "Slide anterior",
@@ -91,6 +92,7 @@ export const pt = {
   "archives.loadingArchives": "A carregar arquivo…",
   "archives.loadingAnalysis": "A preparar análise…",
   "archives.budgetPlan": "Plano de Orçamento",
+  "archives.budgetPlanPeriod": "De {startMonth} a {endMonth}",
   "archives.failedToLoad": "Falha ao carregar ficheiro",
 
   // Opening Balances slide

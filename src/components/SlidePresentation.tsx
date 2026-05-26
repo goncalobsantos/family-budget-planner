@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, LayoutGrid, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, LayoutGrid, X } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
@@ -41,6 +42,7 @@ export default function SlidePresentation({
   const [[page, direction], setPage] = useState([0, 0]);
   const total = slides.length;
   const { t } = useLanguage();
+  const router = useRouter();
 
   const paginate = useCallback(
     (newDirection: number) => {
@@ -243,6 +245,17 @@ export default function SlidePresentation({
 
         {/* Desktop: full label navigation */}
         <div className="hidden sm:flex items-center justify-center gap-1.5 py-3 px-4">
+          <button
+            onClick={() => router.push("/")}
+            className="relative group flex items-center gap-1.5 px-2.5 py-1.5 rounded-full
+                       bg-[var(--bg-tertiary)] hover:bg-[var(--accent-primary)]/20
+                       text-[var(--text-muted)] hover:text-[var(--accent-primary)]
+                       transition-all duration-200 mr-2"
+            aria-label={t("presentation.backToStart")}
+          >
+            <Home size={12} />
+            <span className="text-xs font-medium">{t("presentation.backToStart")}</span>
+          </button>
           {Array.from({ length: total }).map((_, i) => {
             const label = labels?.[i];
             const isActive = i === page;
@@ -310,6 +323,15 @@ export default function SlidePresentation({
                 </button>
               </div>
               <div className="overflow-y-auto max-h-[calc(70vh-48px)] py-2">
+                <button
+                  onClick={() => router.push("/")}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors
+                    text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]"
+                >
+                  <Home size={16} />
+                  <span className="text-sm font-medium">{t("presentation.backToStart")}</span>
+                </button>
+                <div className="my-1 border-b border-[var(--border)]/50" />
                 {Array.from({ length: total }).map((_, i) => {
                   const label = labels?.[i];
                   const isActive = i === page;
@@ -333,7 +355,7 @@ export default function SlidePresentation({
                   );
                 })}
                 {/* Language switcher in menu */}
-                <div className="mt-2 pt-2 border-t border-[var(--border)]/50 px-4 flex items-center justify-between">
+                <div className="mt-2 pt-2 pb-4 border-t border-[var(--border)]/50 px-4 flex items-center justify-between">
                   <span className="text-xs text-[var(--text-muted)]">{t("presentation.language")}</span>
                   <LanguageSwitcher />
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useBudget } from "@/context/BudgetContext";
 import SlidePresentation from "@/components/SlidePresentation";
@@ -24,6 +24,14 @@ import { getIncomeTotal, getExpenseTotal } from "@/lib/data-processor";
 import type { BudgetPlan, BudgetAnalysis } from "@/types/budget";
 
 export default function PresentationPage() {
+  return (
+    <Suspense>
+      <PresentationContent />
+    </Suspense>
+  );
+}
+
+function PresentationContent() {
   const { data, csvText } = useBudget();
   const searchParams = useSearchParams();
   const isFromArchive = searchParams.get("source") === "archive";

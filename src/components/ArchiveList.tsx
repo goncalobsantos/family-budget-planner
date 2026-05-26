@@ -144,6 +144,40 @@ export default function ArchiveList({
     return `${startDay} ${capitalize(startMonth)} — ${endDay} ${capitalize(endMonth)}`;
   };
 
+  const getBudgetPlanSubtitle = (filename: string) => {
+    // New format: budget-plan-YYYY-month-month.json
+    const match = filename.match(/^budget-plan-\d{4}-([a-z]+)-([a-z]+)\.json$/i);
+    if (!match) {
+      // Legacy format: budget-plan-YYYY-MM.json
+      const legacyMatch = filename.match(/^budget-plan-(\d{4})-(\d{2})\.json$/);
+      if (legacyMatch) {
+        const date = new Date(parseInt(legacyMatch[1]), parseInt(legacyMatch[2]) - 1);
+        return date.toLocaleDateString(dateLocale, { month: "long", year: "numeric" });
+      }
+      return null;
+    }
+
+    const [, startMonthEn, endMonthEn] = match;
+    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+    const monthsMap: Record<string, Record<string, string>> = {
+      pt: { january: "janeiro", february: "fevereiro", march: "março", april: "abril", may: "maio", june: "junho", july: "julho", august: "agosto", september: "setembro", october: "outubro", november: "novembro", december: "dezembro" },
+      "pt-BR": { january: "janeiro", february: "fevereiro", march: "março", april: "abril", may: "maio", june: "junho", july: "julho", august: "agosto", september: "setembro", october: "outubro", november: "novembro", december: "dezembro" },
+      es: { january: "enero", february: "febrero", march: "marzo", april: "abril", may: "mayo", june: "junio", july: "julio", august: "agosto", september: "septiembre", october: "octubre", november: "noviembre", december: "diciembre" },
+      fr: { january: "janvier", february: "février", march: "mars", april: "avril", may: "mai", june: "juin", july: "juillet", august: "août", september: "septembre", october: "octobre", november: "novembre", december: "décembre" },
+      ja: { january: "1月", february: "2月", march: "3月", april: "4月", may: "5月", june: "6月", july: "7月", august: "8月", september: "9月", october: "10月", november: "11月", december: "12月" },
+    };
+
+    const months = monthsMap[language];
+    const sm = months?.[startMonthEn.toLowerCase()] ?? capitalize(startMonthEn);
+    const em = months?.[endMonthEn.toLowerCase()] ?? capitalize(endMonthEn);
+
+    return t("archives.budgetPlanPeriod", {
+      startMonth: language === "ja" ? sm : capitalize(sm),
+      endMonth: language === "ja" ? em : capitalize(em),
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -233,10 +267,10 @@ export default function ArchiveList({
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                    {getDisplayName(file.name, file.filename)}
+                    {t("archives.budgetPlan")}
                   </p>
                   <p className="text-xs text-[var(--text-muted)]">
-                    {t("archives.budgetPlan")}
+                    {getBudgetPlanSubtitle(file.filename) ?? file.filename}
                   </p>
                 </div>
                 <Calendar size={14} className="text-[var(--text-muted)]" />
