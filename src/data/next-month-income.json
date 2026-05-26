@@ -1,15 +1,6 @@
 {
   "sources": [
     {
-      "id": "remain-account",
-      "name": "A sobrar",
-      "amount": 159.03,
-      "account": "Main",
-      "isFixed": false,
-      "day": 26,
-      "countsForSavings": false
-    },
-    {
       "id": "salary-g",
       "name": "Salário G (CTW)",
       "amount": 1711.53,
@@ -39,7 +30,7 @@
     {
       "id": "salary-mi-sofia",
       "name": "Ajudas de custo Mi",
-      "amount": 0.00,
+      "amount": 140.00,
       "account": "Main",
       "isFixed": false,
       "day": 1,
@@ -48,7 +39,7 @@
     {
       "id": "coverflex",
       "name": "Coverflex (meal allowance)",
-      "amount": 198.74,
+      "amount": 209.20,
       "account": "Meal",
       "isFixed": true,
       "day": 26,
@@ -56,8 +47,8 @@
     }
   ],
   "accountLeftovers": {
-    "Main": 0,
+    "Main":  159.03,
     "Coverflex": 0,
-    "Savings": 300
+    "Savings": 300.00
   }
 }

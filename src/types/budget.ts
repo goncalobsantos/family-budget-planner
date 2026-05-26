@@ -137,6 +137,7 @@ export interface BudgetPlanSubcategory {
   id: string;
   name: string;
   budgeted: number;
+  isCommitted?: boolean; // true if from scheduled transfers
 }
 
 export interface BudgetPlanCategory {

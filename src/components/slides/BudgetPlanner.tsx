@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Download,
@@ -12,7 +12,6 @@ import {
   Plus,
   Trash2,
   AlertTriangle,
-  TrendingUp,
   Wallet,
   X,
   ChevronDown,
@@ -27,12 +26,48 @@ export default function BudgetPlanner() {
   // Savings percentage
   const [savesPct, setSavesPct] = useState(20);
 
-  // Which scheduled Wants items have been moved to Needs
-  const [movedToNeeds, setMovedToNeeds] = useState<Set<string>>(new Set());
+  // Build initial categories from scheduled transfers
+  const initialCategories = useMemo(() => {
+    if (!data) return { needs: [], wants: [] };
+    const needsMap = new Map<string, BudgetPlanCategory>();
+    const wantsMap = new Map<string, BudgetPlanCategory>();
 
-  // Custom flexible spending categories
-  const [flexibleNeeds, setFlexibleNeeds] = useState<BudgetPlanCategory[]>([]);
-  const [flexibleWants, setFlexibleWants] = useState<BudgetPlanCategory[]>([]);
+    for (const t of data.scheduledTransfers) {
+      const isNeeds = t.nws === "Needs";
+      const map = isNeeds ? needsMap : wantsMap;
+      const catName = t.category || "Outros";
+
+      if (!map.has(catName)) {
+        map.set(catName, {
+          id: `committed-${catName.toLowerCase().replace(/\s+/g, "-")}`,
+          name: catName,
+          budgeted: 0,
+          isFixed: false,
+          subcategories: [],
+        });
+      }
+
+      const cat = map.get(catName)!;
+      cat.subcategories = cat.subcategories || [];
+      cat.subcategories.push({
+        id: `committed-${t.id}`,
+        name: t.name,
+        budgeted: t.amount,
+        isCommitted: true,
+      });
+      // Pre-fill the category budget with the committed total
+      cat.budgeted += t.amount;
+    }
+
+    return {
+      needs: Array.from(needsMap.values()),
+      wants: Array.from(wantsMap.values()),
+    };
+  }, [data]);
+
+  // Custom flexible spending categories (initialized from committed)
+  const [flexibleNeeds, setFlexibleNeeds] = useState<BudgetPlanCategory[]>(initialCategories.needs);
+  const [flexibleWants, setFlexibleWants] = useState<BudgetPlanCategory[]>(initialCategories.wants);
 
   // Savings allocations to goals
   const [savingsAllocations, setSavingsAllocations] = useState<SavingsAllocation[]>([]);
@@ -63,46 +98,30 @@ export default function BudgetPlanner() {
   const totalIncome = incomeFromSources + totalLeftovers;
   const savingsBase = nextMonthIncome.sources
     .filter((src) => src.countsForSavings)
-    .reduce((s, src) => s + src.amount, 0) + totalLeftovers;
-
-  // ── Scheduled transfers split ──
-  const scheduledNeeds = scheduledTransfers.filter(
-    (t) => t.nws === "Needs" || movedToNeeds.has(t.id)
-  );
-  const scheduledWants = scheduledTransfers.filter(
-    (t) => t.nws === "Wants" && !movedToNeeds.has(t.id)
-  );
-  const scheduledNeedsTotal = scheduledNeeds.reduce((s, t) => s + t.amount, 0);
-  const scheduledWantsTotal = scheduledWants.reduce((s, t) => s + t.amount, 0);
-  const scheduledTotal = scheduledNeedsTotal + scheduledWantsTotal;
+    .reduce((s, src) => s + src.amount, 0);
 
   // ── Savings ──
   const savingsAmount = (savingsBase * savesPct) / 100;
   const allocatedToGoals = savingsAllocations.reduce((s, a) => s + a.amount, 0);
   const unallocatedSavings = Math.max(0, savingsAmount - allocatedToGoals);
 
-  // ── Flexible budget ──
-  const flexibleTotal = Math.max(0, totalIncome - scheduledTotal - savingsAmount);
-  // Category total = its own budgeted + sum of subcategories
-  const getCategoryTotal = (cat: BudgetPlanCategory): number => {
-    const subTotal = (cat.subcategories || []).reduce((s, sc) => s + sc.budgeted, 0);
-    return cat.budgeted + subTotal;
-  };
-  const flexibleNeedsTotal = flexibleNeeds.reduce((s, c) => s + getCategoryTotal(c), 0);
-  const flexibleWantsTotal = flexibleWants.reduce((s, c) => s + getCategoryTotal(c), 0);
-  const flexibleAllocated = flexibleNeedsTotal + flexibleWantsTotal;
-  const flexibleUnallocated = Math.max(0, flexibleTotal - flexibleAllocated);
+  // ── Category totals ──
+  // cat.budgeted already includes committed amounts as the floor
+  const getCategoryTotal = (cat: BudgetPlanCategory): number => cat.budgeted;
 
-  // ── Grand totals ──
-  const totalNeeds = scheduledNeedsTotal + flexibleNeedsTotal;
-  const totalWants = scheduledWantsTotal + flexibleWantsTotal;
-  const needsPctOfIncome = totalIncome > 0 ? Math.round((totalNeeds / totalIncome) * 10000) / 100 : 0;
-  const wantsPctOfIncome = totalIncome > 0 ? Math.round((totalWants / totalIncome) * 10000) / 100 : 0;
+  // Get the committed minimum for a category (sum of committed subcategories)
+  const getCommittedMin = (cat: BudgetPlanCategory): number =>
+    (cat.subcategories || []).filter((sc) => sc.isCommitted).reduce((s, sc) => s + sc.budgeted, 0);
+  const needsTotal = flexibleNeeds.reduce((s, c) => s + getCategoryTotal(c), 0);
+  const wantsTotal = flexibleWants.reduce((s, c) => s + getCategoryTotal(c), 0);
 
-  // ── Budget health indicator ──
-  const totalAllocated = totalNeeds + totalWants + savingsAmount;
+  // ── Budget health ──
+  const totalAllocated = needsTotal + wantsTotal + savingsAmount;
+  const unassigned = Math.max(0, totalIncome - totalAllocated);
   const overBudget = totalAllocated > totalIncome + 0.01;
   const allMoneyAssigned = Math.abs(totalIncome - totalAllocated) < 0.01;
+  const needsPctOfIncome = totalIncome > 0 ? Math.round((needsTotal / totalIncome) * 10000) / 100 : 0;
+  const wantsPctOfIncome = totalIncome > 0 ? Math.round((wantsTotal / totalIncome) * 10000) / 100 : 0;
 
   // ── Available personal categories (from CSV extraInfoBreakdown) ──
   const allPersonalCategories = data.extraInfoBreakdown.map((c) => c.category);
@@ -129,7 +148,7 @@ export default function BudgetPlanner() {
     }
 
     if (editingField === "saves") {
-      const maxSaves = totalIncome - scheduledTotal;
+      const maxSaves = totalIncome - needsTotal - wantsTotal;
       const clamped = Math.min(val, maxSaves);
       const newPct = savingsBase > 0 ? (clamped / savingsBase) * 100 : 0;
       setSavesPct(newPct);
@@ -156,12 +175,20 @@ export default function BudgetPlanner() {
     } else if (editingField.startsWith("flex-needs-")) {
       const id = editingField.replace("flex-needs-", "");
       setFlexibleNeeds((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, budgeted: val } : c))
+        prev.map((c) => {
+          if (c.id !== id) return c;
+          const floor = getCommittedMin(c);
+          return { ...c, budgeted: Math.max(val, floor) };
+        })
       );
     } else if (editingField.startsWith("flex-wants-")) {
       const id = editingField.replace("flex-wants-", "");
       setFlexibleWants((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, budgeted: val } : c))
+        prev.map((c) => {
+          if (c.id !== id) return c;
+          const floor = getCommittedMin(c);
+          return { ...c, budgeted: Math.max(val, floor) };
+        })
       );
     } else if (editingField.startsWith("goal-")) {
       const goalId = editingField.replace("goal-", "");
@@ -175,15 +202,6 @@ export default function BudgetPlanner() {
       });
     }
     setEditingField(null);
-  };
-
-  const toggleMoveToNeeds = (id: string) => {
-    setMovedToNeeds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
   };
 
   const addCategory = (type: "needs" | "wants") => {
@@ -280,7 +298,7 @@ export default function BudgetPlanner() {
       })),
       accountLeftovers: nextMonthIncome.accountLeftovers,
       scheduledTransfers,
-      scheduledTotal,
+      scheduledTotal: scheduledTransfers.reduce((s, t) => s + t.amount, 0),
       savings: {
         totalAmount: savingsAmount,
         percentage: Math.round(savesPct * 100) / 100,
@@ -288,51 +306,37 @@ export default function BudgetPlanner() {
         unallocated: unallocatedSavings,
       },
       flexibleBudget: {
-        total: flexibleTotal,
+        total: totalIncome - savingsAmount,
         needs: {
-          total: flexibleNeedsTotal,
+          total: needsTotal,
           categories: flexibleNeeds.filter((c) => getCategoryTotal(c) > 0),
         },
         wants: {
-          total: flexibleWantsTotal,
+          total: wantsTotal,
           categories: flexibleWants.filter((c) => getCategoryTotal(c) > 0),
         },
       },
       allocations: {
-        needs: { percentage: needsPctOfIncome, amount: totalNeeds },
-        wants: { percentage: wantsPctOfIncome, amount: totalWants },
+        needs: { percentage: needsPctOfIncome, amount: needsTotal },
+        wants: { percentage: wantsPctOfIncome, amount: wantsTotal },
         saves: { percentage: Math.round(savesPct * 100) / 100, amount: savingsAmount },
       },
-      disposableIncome: flexibleTotal,
+      disposableIncome: totalIncome - savingsAmount,
       categoryBreakdown: {
-        needs: [
-          ...scheduledNeeds.map((t) => ({
-            category: t.name,
-            percentage: Math.round((t.amount / (totalNeeds || 1)) * 100),
-            amount: t.amount,
+        needs: flexibleNeeds
+          .filter((c) => getCategoryTotal(c) > 0)
+          .map((c) => ({
+            category: c.name,
+            percentage: Math.round((getCategoryTotal(c) / (needsTotal || 1)) * 100),
+            amount: getCategoryTotal(c),
           })),
-          ...flexibleNeeds
-            .filter((c) => getCategoryTotal(c) > 0)
-            .map((c) => ({
-              category: c.name,
-              percentage: Math.round((getCategoryTotal(c) / (totalNeeds || 1)) * 100),
-              amount: getCategoryTotal(c),
-            })),
-        ],
-        wants: [
-          ...scheduledWants.map((t) => ({
-            category: t.name,
-            percentage: Math.round((t.amount / (totalWants || 1)) * 100),
-            amount: t.amount,
+        wants: flexibleWants
+          .filter((c) => getCategoryTotal(c) > 0)
+          .map((c) => ({
+            category: c.name,
+            percentage: Math.round((getCategoryTotal(c) / (wantsTotal || 1)) * 100),
+            amount: getCategoryTotal(c),
           })),
-          ...flexibleWants
-            .filter((c) => getCategoryTotal(c) > 0)
-            .map((c) => ({
-              category: c.name,
-              percentage: Math.round((getCategoryTotal(c) / (totalWants || 1)) * 100),
-              amount: getCategoryTotal(c),
-            })),
-        ],
       },
     };
 
@@ -370,18 +374,20 @@ export default function BudgetPlanner() {
     amount,
     color,
     small,
+    min: minVal = 0,
   }: {
     field: string;
     amount: number;
     color: string;
     small?: boolean;
+    min?: number;
   }) => {
     if (editingField === field) {
       return (
         <input
           type="number"
           step="0.01"
-          min="0"
+          min={minVal}
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={commitEdit}
@@ -446,14 +452,14 @@ export default function BudgetPlanner() {
           <div
             className="h-full transition-all duration-300"
             style={{
-              width: `${Math.min(100, (totalNeeds / totalIncome) * 100)}%`,
+              width: `${Math.min(100, (needsTotal / totalIncome) * 100)}%`,
               backgroundColor: "var(--needs)",
             }}
           />
           <div
             className="h-full transition-all duration-300"
             style={{
-              width: `${Math.min(100, (totalWants / totalIncome) * 100)}%`,
+              width: `${Math.min(100, (wantsTotal / totalIncome) * 100)}%`,
               backgroundColor: "var(--wants)",
             }}
           />
@@ -474,16 +480,16 @@ export default function BudgetPlanner() {
           <p className="text-lg font-bold text-[var(--income)]">€{totalIncome.toFixed(2)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Committed</p>
-          <p className="text-lg font-bold text-[var(--expense)]">€{scheduledTotal.toFixed(2)}</p>
+          <p className="text-xs text-[var(--text-muted)]">Needs</p>
+          <p className="text-lg font-bold text-[var(--needs)]">€{needsTotal.toFixed(2)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
           <p className="text-xs text-[var(--text-muted)]">Savings</p>
           <p className="text-lg font-bold text-[var(--saves-color)]">€{savingsAmount.toFixed(2)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Flexible</p>
-          <p className="text-lg font-bold text-[var(--accent-primary)]">€{flexibleTotal.toFixed(2)}</p>
+          <p className="text-xs text-[var(--text-muted)]">Wants</p>
+          <p className="text-lg font-bold text-[var(--wants)]">€{wantsTotal.toFixed(2)}</p>
         </div>
       </div>
 
@@ -541,24 +547,23 @@ export default function BudgetPlanner() {
         )}
       </div>
 
-      {/* Flexible Budget: Needs & Wants with custom categories + subcategories */}
+      {/* Budget: Needs & Wants with categories */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Flexible Needs */}
+        {/* Needs */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Lock size={16} className="text-[var(--needs)]" />
-              <h3 className="font-medium text-[var(--needs)]">Flexible Needs</h3>
+              <h3 className="font-medium text-[var(--needs)]">Needs</h3>
             </div>
             <span className="text-sm font-bold text-[var(--text-primary)]">
-              €{flexibleNeedsTotal.toFixed(2)}
+              €{needsTotal.toFixed(2)}
             </span>
           </div>
           <div className="space-y-1">
             {flexibleNeeds.map((cat) => {
               const isExpanded = expandedCategories.has(cat.id);
               const hasSubs = (cat.subcategories || []).length > 0;
-              const catTotal = getCategoryTotal(cat);
               return (
                 <div key={cat.id} className="border-b border-[var(--border)]/50 last:border-0 pb-1">
                   <div className="flex items-center justify-between py-1">
@@ -583,39 +588,43 @@ export default function BudgetPlanner() {
                       </button>
                     </div>
                     <div className="flex items-center gap-2">
-                      {hasSubs && catTotal > cat.budgeted && (
-                        <span className="text-[10px] text-[var(--text-muted)]">
-                          Σ€{catTotal.toFixed(0)}
-                        </span>
-                      )}
                       <EditableAmount
                         field={`flex-needs-${cat.id}`}
                         amount={cat.budgeted}
                         color="var(--needs)"
                         small
+                        min={getCommittedMin(cat)}
                       />
                     </div>
                   </div>
-                  {/* Subcategories */}
+                  {/* Category detail items */}
                   {isExpanded && (
                     <div className="ml-5 space-y-0.5 mb-1">
                       {(cat.subcategories || []).map((sub) => (
                         <div key={sub.id} className="flex items-center justify-between py-0.5">
                           <div className="flex items-center gap-1.5 group">
-                            <span className="text-xs text-[var(--text-secondary)]">↳ {sub.name}</span>
-                            <button
-                              onClick={() => removeSubcategory("needs", cat.id, sub.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Trash2 size={10} className="text-[var(--text-muted)]" />
-                            </button>
+                            <span className={`text-xs ${sub.isCommitted ? "text-[var(--text-muted)]" : "text-[var(--text-secondary)]"}`}>
+                              {sub.isCommitted ? "⚡" : "↳"} {sub.name}
+                            </span>
+                            {!sub.isCommitted && (
+                              <button
+                                onClick={() => removeSubcategory("needs", cat.id, sub.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 size={10} className="text-[var(--text-muted)]" />
+                              </button>
+                            )}
                           </div>
-                          <EditableAmount
-                            field={`sub-needs-${sub.id}`}
-                            amount={sub.budgeted}
-                            color="var(--needs)"
-                            small
-                          />
+                          {sub.isCommitted ? (
+                            <span className="text-xs font-medium text-[var(--text-muted)]">€{sub.budgeted.toFixed(2)}</span>
+                          ) : (
+                            <EditableAmount
+                              field={`sub-needs-${sub.id}`}
+                              amount={sub.budgeted}
+                              color="var(--needs)"
+                              small
+                            />
+                          )}
                         </div>
                       ))}
                       {/* Add subcategory */}
@@ -701,22 +710,21 @@ export default function BudgetPlanner() {
           )}
         </div>
 
-        {/* Flexible Wants */}
+        {/* Wants */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Unlock size={16} className="text-[var(--wants)]" />
-              <h3 className="font-medium text-[var(--wants)]">Flexible Wants</h3>
+              <h3 className="font-medium text-[var(--wants)]">Wants</h3>
             </div>
             <span className="text-sm font-bold text-[var(--text-primary)]">
-              €{flexibleWantsTotal.toFixed(2)}
+              €{wantsTotal.toFixed(2)}
             </span>
           </div>
           <div className="space-y-1">
             {flexibleWants.map((cat) => {
               const isExpanded = expandedCategories.has(cat.id);
               const hasSubs = (cat.subcategories || []).length > 0;
-              const catTotal = getCategoryTotal(cat);
               return (
                 <div key={cat.id} className="border-b border-[var(--border)]/50 last:border-0 pb-1">
                   <div className="flex items-center justify-between py-1">
@@ -741,39 +749,43 @@ export default function BudgetPlanner() {
                       </button>
                     </div>
                     <div className="flex items-center gap-2">
-                      {hasSubs && catTotal > cat.budgeted && (
-                        <span className="text-[10px] text-[var(--text-muted)]">
-                          Σ€{catTotal.toFixed(0)}
-                        </span>
-                      )}
                       <EditableAmount
                         field={`flex-wants-${cat.id}`}
                         amount={cat.budgeted}
                         color="var(--wants)"
                         small
+                        min={getCommittedMin(cat)}
                       />
                     </div>
                   </div>
-                  {/* Subcategories */}
+                  {/* Category detail items */}
                   {isExpanded && (
                     <div className="ml-5 space-y-0.5 mb-1">
                       {(cat.subcategories || []).map((sub) => (
                         <div key={sub.id} className="flex items-center justify-between py-0.5">
                           <div className="flex items-center gap-1.5 group">
-                            <span className="text-xs text-[var(--text-secondary)]">↳ {sub.name}</span>
-                            <button
-                              onClick={() => removeSubcategory("wants", cat.id, sub.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Trash2 size={10} className="text-[var(--text-muted)]" />
-                            </button>
+                            <span className={`text-xs ${sub.isCommitted ? "text-[var(--text-muted)]" : "text-[var(--text-secondary)]"}`}>
+                              {sub.isCommitted ? "⚡" : "↳"} {sub.name}
+                            </span>
+                            {!sub.isCommitted && (
+                              <button
+                                onClick={() => removeSubcategory("wants", cat.id, sub.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 size={10} className="text-[var(--text-muted)]" />
+                              </button>
+                            )}
                           </div>
-                          <EditableAmount
-                            field={`sub-wants-${sub.id}`}
-                            amount={sub.budgeted}
-                            color="var(--wants)"
-                            small
-                          />
+                          {sub.isCommitted ? (
+                            <span className="text-xs font-medium text-[var(--text-muted)]">€{sub.budgeted.toFixed(2)}</span>
+                          ) : (
+                            <EditableAmount
+                              field={`sub-wants-${sub.id}`}
+                              amount={sub.budgeted}
+                              color="var(--wants)"
+                              small
+                            />
+                          )}
                         </div>
                       ))}
                       {/* Add subcategory */}
@@ -858,85 +870,6 @@ export default function BudgetPlanner() {
           )}
         </div>
       </div>
-
-      {/* Unallocated flexible money info */}
-      {flexibleUnallocated > 0.01 && (
-        <div className="rounded-xl p-3 border border-[var(--accent-primary)]/50 bg-[var(--accent-primary)]/10 flex items-center gap-3">
-          <TrendingUp size={16} className="text-[var(--accent-primary)]" />
-          <span className="text-sm text-[var(--text-secondary)]">
-            €{flexibleUnallocated.toFixed(2)} of flexible budget not yet assigned to categories.
-            Assign it or it stays as a buffer.
-          </span>
-        </div>
-      )}
-
-      {/* Scheduled Payments Breakdown (collapsible) */}
-      <details className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] overflow-hidden">
-        <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-[var(--bg-tertiary)] transition-colors">
-          <div className="flex items-center gap-2">
-            <Lock size={16} className="text-[var(--text-muted)]" />
-            <span className="font-medium text-[var(--text-primary)]">Committed Payments</span>
-          </div>
-          <span className="text-sm font-bold text-[var(--expense)]">
-            €{scheduledTotal.toFixed(2)}
-          </span>
-        </summary>
-        <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Scheduled Needs */}
-          <div>
-            <h4 className="text-xs font-medium text-[var(--needs)] mb-2 uppercase tracking-wide">
-              Needs — €{scheduledNeedsTotal.toFixed(2)}
-            </h4>
-            <div className="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
-              {scheduledNeeds.map((t) => {
-                const isMovedFromWants = t.nws === "Wants" && movedToNeeds.has(t.id);
-                return (
-                  <div key={t.id} className="flex items-center justify-between py-1 text-sm">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[var(--text-primary)]">{t.name}</span>
-                      {isMovedFromWants && (
-                        <button
-                          onClick={() => toggleMoveToNeeds(t.id)}
-                          className="text-[9px] px-1 py-0.5 rounded bg-[var(--wants)]/20 text-[var(--wants)]"
-                        >
-                          undo
-                        </button>
-                      )}
-                    </div>
-                    <span className="font-medium text-[var(--text-primary)]">€{t.amount.toFixed(2)}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Scheduled Wants */}
-          <div>
-            <h4 className="text-xs font-medium text-[var(--wants)] mb-2 uppercase tracking-wide">
-              Wants — €{scheduledWantsTotal.toFixed(2)}
-            </h4>
-            <div className="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
-              {scheduledWants.map((t) => (
-                <div key={t.id} className="flex items-center justify-between py-1 text-sm">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[var(--text-primary)]">{t.name}</span>
-                    <button
-                      onClick={() => toggleMoveToNeeds(t.id)}
-                      className="text-[9px] px-1 py-0.5 rounded bg-[var(--needs)]/20 text-[var(--needs)] hover:bg-[var(--needs)]/30"
-                    >
-                      → Needs
-                    </button>
-                  </div>
-                  <span className="font-medium text-[var(--text-primary)]">€{t.amount.toFixed(2)}</span>
-                </div>
-              ))}
-              {scheduledWants.length === 0 && (
-                <p className="text-xs text-[var(--text-muted)] italic">All moved to Needs</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </details>
 
       {/* Export button */}
       <motion.button

@@ -29,7 +29,7 @@ export default function NextMonthPreview() {
   );
   const savingsBase = nextMonthIncome.sources
     .filter((src) => src.countsForSavings)
-    .reduce((s, src) => s + src.amount, 0) + totalLeftovers;
+    .reduce((s, src) => s + src.amount, 0);
   const savingsAmount = savingsBase * 0.2;
   const disposable = totalIncome + totalLeftovers - totalScheduled - savingsAmount;
 
