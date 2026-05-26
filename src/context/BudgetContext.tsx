@@ -39,6 +39,7 @@ interface BudgetContextValue {
   data: BudgetData | null;
   csvText: string | null;
   loadCsv: (csvText: string) => void;
+  clearData: () => void;
   error: string | null;
 }
 
@@ -46,6 +47,7 @@ const BudgetContext = createContext<BudgetContextValue>({
   data: null,
   csvText: null,
   loadCsv: () => {},
+  clearData: () => {},
   error: null,
 });
 
@@ -53,6 +55,12 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<BudgetData | null>(null);
   const [csvText, setCsvText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const clearData = useCallback(() => {
+    setData(null);
+    setCsvText(null);
+    setError(null);
+  }, []);
 
   const loadCsv = useCallback((text: string) => {
     try {
@@ -104,7 +112,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <BudgetContext.Provider value={{ data, csvText, loadCsv, error }}>
+    <BudgetContext.Provider value={{ data, csvText, loadCsv, clearData, error }}>
       {children}
     </BudgetContext.Provider>
   );

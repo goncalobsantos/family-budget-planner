@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, FileSpreadsheet, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
@@ -13,11 +13,17 @@ import type { BudgetPlan } from "@/types/budget";
 
 export default function UploadPage() {
   const router = useRouter();
-  const { loadCsv, data, error } = useBudget();
+  const { loadCsv, clearData, data, error } = useBudget();
   const { t, dateLocale } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [loadingArchive, setLoadingArchive] = useState(false);
+
+  // Clear stale data when returning to home page (e.g. browser back from archive)
+  useEffect(() => {
+    clearData();
+    setFileName(null);
+  }, [clearData]);
   const [budgetPlan, setBudgetPlan] = useState<{
     plan: BudgetPlan;
     name: string;
@@ -65,7 +71,7 @@ export default function UploadPage() {
       setTimeout(() => {
         loadCsv(csvText);
         setTimeout(() => {
-          router.push("/presentation");
+          router.push("/presentation?source=archive");
         }, 600);
       }, 100);
     },

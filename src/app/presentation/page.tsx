@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useBudget } from "@/context/BudgetContext";
 import SlidePresentation from "@/components/SlidePresentation";
 import OpeningBalances from "@/components/slides/OpeningBalances";
@@ -19,10 +19,15 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Archive, Check } from "lucide-react";
 import SaveArchiveModal from "@/components/SaveArchiveModal";
+import { getIncomeTotal, getExpenseTotal } from "@/lib/data-processor";
+
 import type { BudgetPlan, BudgetAnalysis } from "@/types/budget";
 
 export default function PresentationPage() {
   const { data, csvText } = useBudget();
+  const searchParams = useSearchParams();
+  const isFromArchive = searchParams.get("source") === "archive";
+  const canSave = !!csvText && !isFromArchive;
   const router = useRouter();
   const { t } = useLanguage();
   const [archiveSaved, setArchiveSaved] = useState(false);
@@ -105,7 +110,7 @@ export default function PresentationPage() {
     { short: t("slideLabel.debtsAndGoals"), icon: "🎯" },
   ];
 
-  const mobileArchiveBtn = csvText ? (
+  const mobileArchiveBtn = canSave ? (
     <div className="relative">
       <button
         onClick={() => setShowSaveModal(true)}
@@ -130,7 +135,7 @@ export default function PresentationPage() {
         <div className="pointer-events-auto">
           <LanguageSwitcher />
         </div>
-        {csvText && (
+        {canSave && (
           <button
             onClick={() => setShowSaveModal(true)}
             disabled={archiveSaved || archiveSaving}
@@ -202,8 +207,8 @@ export default function PresentationPage() {
         <SaveArchiveModal
           dateRange={data.dateRange}
           recordCount={data.records.length}
-          incomeTotal={data.records.filter(r => r.amount > 0).reduce((sum, r) => sum + r.amount, 0)}
-          expenseTotal={Math.abs(data.records.filter(r => r.amount < 0).reduce((sum, r) => sum + r.amount, 0))}
+          incomeTotal={getIncomeTotal(data.records)}
+          expenseTotal={getExpenseTotal(data.records)}
           onSave={saveToArchive}
           onClose={() => setShowSaveModal(false)}
           saving={archiveSaving}
