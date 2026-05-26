@@ -12,6 +12,7 @@ import {
   PiggyBank,
 } from "lucide-react";
 import type { BudgetAnalysis, BudgetVsActualLine } from "@/types/budget";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Props {
   analysis: BudgetAnalysis;
@@ -93,6 +94,7 @@ function CategoryLine({ line }: { line: BudgetVsActualLine }) {
 }
 
 export default function BudgetAnalysisSlide({ analysis }: Props) {
+  const { t, dateLocale } = useLanguage();
   const {
     planMonth,
     isPartialPeriod,
@@ -121,20 +123,20 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
 
   // Format month for display
   const monthDate = new Date(`${planMonth}-01`);
-  const monthName = monthDate.toLocaleDateString("en-US", {
+  const monthName = monthDate.toLocaleDateString(dateLocale, {
     month: "long",
     year: "numeric",
   });
 
   return (
-    <div className="w-full space-y-5 overflow-y-auto max-h-[calc(100vh-120px)] pr-2">
+    <div className="w-full space-y-4 sm:space-y-5 overflow-y-auto max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)] pr-1 sm:pr-2">
       {/* Header */}
       <div className="text-center space-y-1">
-        <h2 className="text-3xl font-bold text-[var(--text-primary)]">
-          Budget Review — {monthName}
+        <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+          {t("budgetAnalysis.title", { month: monthName })}
         </h2>
         <p className="text-[var(--text-muted)] text-sm">
-          How did we do vs. the plan?
+          {t("budgetAnalysis.subtitle")}
         </p>
       </div>
 
@@ -158,7 +160,7 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
         <div className="rounded-xl p-3 border border-[var(--accent-primary)]/50 bg-[var(--accent-primary)]/10 flex items-center gap-2">
           <Clock size={14} className="text-[var(--accent-primary)]" />
           <span className="text-sm text-[var(--text-secondary)]">
-            Partial month: {daysInPeriod} of {daysInMonth} days ({coveragePercentage}% coverage)
+            {t("budgetAnalysis.partialMonth", { days: daysInPeriod, totalDays: daysInMonth, pct: coveragePercentage })}
           </span>
         </div>
       )}
@@ -166,31 +168,31 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
       {/* High-level Budget vs Actual */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Income</p>
-          <p className="text-sm text-[var(--text-muted)]">€{totalBudgetedIncome.toFixed(0)} planned</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("common.income")}</p>
+          <p className="text-sm text-[var(--text-muted)]">€{totalBudgetedIncome.toFixed(0)} {t("common.planned")}</p>
           <p className="text-lg font-bold text-[var(--income)]">€{actualIncome.toFixed(0)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Expenses</p>
-          <p className="text-sm text-[var(--text-muted)]">€{totalBudgetedExpenses.toFixed(0)} planned</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("common.expenses")}</p>
+          <p className="text-sm text-[var(--text-muted)]">€{totalBudgetedExpenses.toFixed(0)} {t("common.planned")}</p>
           <p className={`text-lg font-bold ${overallOnTrack ? "text-[var(--income)]" : "text-[var(--expense)]"}`}>
             €{actualExpenses.toFixed(0)}
           </p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Savings</p>
-          <p className="text-sm text-[var(--text-muted)]">€{savesBudgeted.toFixed(0)} target</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("common.savings")}</p>
+          <p className="text-sm text-[var(--text-muted)]">€{savesBudgeted.toFixed(0)} {t("common.target")}</p>
           <p className={`text-lg font-bold ${savesActual >= savesBudgeted * 0.8 ? "text-[var(--saves-color)]" : "text-[var(--expense)]"}`}>
             €{savesActual.toFixed(0)}
           </p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Net Result</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("common.net")}</p>
           <p className={`text-lg font-bold ${totalDifference >= 0 ? "text-[var(--income)]" : "text-[var(--expense)]"}`}>
             {totalDifference >= 0 ? "+" : ""}€{totalDifference.toFixed(0)}
           </p>
           <p className="text-xs text-[var(--text-muted)]">
-            {totalDifference >= 0 ? "under budget" : "over budget"}
+            {totalDifference >= 0 ? t("budgetAnalysis.underBudget") : t("budgetAnalysis.overBudget")}
           </p>
         </div>
       </div>
@@ -198,13 +200,13 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
       {/* NWS Comparison Bars */}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4">
         <h3 className="font-medium text-[var(--text-primary)] mb-3">
-          Budget vs Actual by Category
+          {t("budgetAnalysis.budgetVsActual")}
         </h3>
         <div className="space-y-3">
           {/* Needs */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-[var(--needs)]">Needs</span>
+              <span className="text-sm font-medium text-[var(--needs)]">{t("common.needs")}</span>
               <span className="text-sm text-[var(--text-muted)]">
                 €{needsActual.toFixed(0)} / €{needsBudgeted.toFixed(0)}
                 <span className={`ml-2 font-medium ${needsActual <= needsBudgeted ? "text-[var(--income)]" : "text-[var(--expense)]"}`}>
@@ -233,7 +235,7 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
           {/* Wants */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-[var(--wants)]">Wants</span>
+              <span className="text-sm font-medium text-[var(--wants)]">{t("common.wants")}</span>
               <span className="text-sm text-[var(--text-muted)]">
                 €{wantsActual.toFixed(0)} / €{wantsBudgeted.toFixed(0)}
                 <span className={`ml-2 font-medium ${wantsActual <= wantsBudgeted ? "text-[var(--income)]" : "text-[var(--expense)]"}`}>
@@ -262,7 +264,7 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
           {/* Saves */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-[var(--saves-color)]">Saves</span>
+              <span className="text-sm font-medium text-[var(--saves-color)]">{t("common.saves")}</span>
               <span className="text-sm text-[var(--text-muted)]">
                 €{savesActual.toFixed(0)} / €{savesBudgeted.toFixed(0)}
                 <span className={`ml-2 font-medium ${savesActual >= savesBudgeted * 0.8 ? "text-[var(--income)]" : "text-[var(--expense)]"}`}>
@@ -296,7 +298,7 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
         {needsBreakdown.length > 0 && (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4">
             <h4 className="text-xs font-medium text-[var(--needs)] mb-2 uppercase tracking-wide">
-              Needs Breakdown
+              {t("budgetAnalysis.needsBreakdown")}
             </h4>
             <div className="space-y-0.5 max-h-[250px] overflow-y-auto pr-1">
               {needsBreakdown
@@ -312,7 +314,7 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
         {wantsBreakdown.length > 0 && (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4">
             <h4 className="text-xs font-medium text-[var(--wants)] mb-2 uppercase tracking-wide">
-              Wants Breakdown
+              {t("budgetAnalysis.wantsBreakdown")}
             </h4>
             <div className="space-y-0.5 max-h-[250px] overflow-y-auto pr-1">
               {wantsBreakdown
@@ -331,7 +333,7 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
           <div className="rounded-2xl border border-[var(--income)]/30 bg-[var(--income)]/5 p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp size={16} className="text-[var(--income)]" />
-              <h4 className="font-medium text-[var(--income)]">Wins</h4>
+              <h4 className="font-medium text-[var(--income)]">{t("budgetAnalysis.wins")}</h4>
             </div>
             <div className="space-y-1.5">
               {wins.slice(0, 6).map((w, i) => (
@@ -348,7 +350,7 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
           <div className="rounded-2xl border border-[var(--expense)]/30 bg-[var(--expense)]/5 p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrendingDown size={16} className="text-[var(--expense)]" />
-              <h4 className="font-medium text-[var(--expense)]">Overages</h4>
+              <h4 className="font-medium text-[var(--expense)]">{t("budgetAnalysis.overages")}</h4>
             </div>
             <div className="space-y-1.5">
               {overages.slice(0, 6).map((o, i) => (
@@ -367,7 +369,7 @@ export default function BudgetAnalysisSlide({ analysis }: Props) {
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-6 text-center">
           <Target size={24} className="mx-auto mb-2 text-[var(--text-muted)]" />
           <p className="text-sm text-[var(--text-muted)]">
-            No specific category comparisons available. The budget plan may not have detailed categories.
+            {t("budgetAnalysis.noCategoryComparisons")}
           </p>
         </div>
       )}

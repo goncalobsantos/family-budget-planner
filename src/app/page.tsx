@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Upload, FileSpreadsheet, ArrowRight, AlertCircle } from "lucide-react";
 import { useBudget } from "@/context/BudgetContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import ArchiveList from "@/components/ArchiveList";
 import BudgetPlanViewer from "@/components/BudgetPlanViewer";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import type { BudgetPlan } from "@/types/budget";
 
 export default function UploadPage() {
   const router = useRouter();
   const { loadCsv, data, error } = useBudget();
+  const { t, dateLocale } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [budgetPlan, setBudgetPlan] = useState<{
@@ -82,19 +85,22 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8">
+      <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-40">
+        <LanguageSwitcher />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-xl"
       >
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-3">
-            Family Budget
+        <div className="text-center mb-6 sm:mb-10">
+          <h1 className="text-2xl sm:text-4xl font-bold text-[var(--text-primary)] mb-2 sm:mb-3">
+            {t("common.familyBudget")}
           </h1>
-          <p className="text-[var(--text-muted)] text-lg">
-            Upload your monthly Wallet CSV or browse past analyses
+          <p className="text-[var(--text-muted)] text-base sm:text-lg">
+            {t("upload.subtitle")}
           </p>
         </div>
 
@@ -108,7 +114,7 @@ export default function UploadPage() {
           onDrop={onDrop}
           onClick={() => fileRef.current?.click()}
           className={`
-            relative cursor-pointer rounded-2xl border-2 border-dashed p-12
+            relative cursor-pointer rounded-2xl border-2 border-dashed p-6 sm:p-12
             transition-all duration-300 text-center
             ${
               isDragging
@@ -137,12 +143,14 @@ export default function UploadPage() {
                 {fileName}
               </p>
               <p className="text-[var(--text-muted)] text-sm">
-                {data.records.length} records loaded ·{" "}
-                {new Date(data.dateRange.start).toLocaleDateString("pt-PT")} —{" "}
-                {new Date(data.dateRange.end).toLocaleDateString("pt-PT")}
+                {t("upload.recordsLoaded", {
+                  count: data.records.length,
+                  start: new Date(data.dateRange.start).toLocaleDateString(dateLocale),
+                  end: new Date(data.dateRange.end).toLocaleDateString(dateLocale),
+                })}
               </p>
               <p className="text-xs text-[var(--text-muted)]">
-                Click to upload a different file
+                {t("upload.clickDifferentFile")}
               </p>
             </div>
           ) : (
@@ -152,10 +160,10 @@ export default function UploadPage() {
                 className={`mx-auto ${isDragging ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)]"}`}
               />
               <p className="text-[var(--text-primary)] font-medium">
-                Drop your CSV file here
+                {t("upload.dropHere")}
               </p>
               <p className="text-[var(--text-muted)] text-sm">
-                or click to browse
+                {t("upload.orClickBrowse")}
               </p>
             </div>
           )}
@@ -186,7 +194,7 @@ export default function UploadPage() {
                        text-white transition-colors duration-200
                        flex items-center justify-center gap-3"
           >
-            Start Presentation
+            {t("upload.startPresentation")}
             <ArrowRight size={20} />
           </motion.button>
         )}

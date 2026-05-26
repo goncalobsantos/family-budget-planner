@@ -10,9 +10,11 @@ import {
   PiggyBank,
 } from "lucide-react";
 import { useBudget } from "@/context/BudgetContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function NextMonthPreview() {
   const { data } = useBudget();
+  const { t } = useLanguage();
   if (!data) return null;
 
   const { nextMonthIncome, scheduledTransfers } = data;
@@ -44,14 +46,14 @@ export default function NextMonthPreview() {
   });
 
   return (
-    <div className="w-full space-y-8 overflow-y-auto max-h-[calc(100vh-120px)] pr-2">
+    <div className="w-full space-y-5 sm:space-y-8 overflow-y-auto max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)] pr-1 sm:pr-2">
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-[var(--text-primary)]">
-          Next Month Preview
+        <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+          {t("nextMonth.title")}
         </h2>
         <p className="text-[var(--text-muted)]">
           <Calendar size={14} className="inline mr-1" />
-          Expected income &amp; scheduled payments
+          {t("nextMonth.subtitle")}
         </p>
       </div>
 
@@ -65,7 +67,7 @@ export default function NextMonthPreview() {
           <div className="flex items-center gap-2 mb-5">
             <ArrowUpRight size={20} className="text-[var(--income)]" />
             <h3 className="font-medium text-[var(--text-primary)]">
-              Expected Income
+              {t("nextMonth.expectedIncome")}
             </h3>
           </div>
           <div className="space-y-3">
@@ -100,7 +102,7 @@ export default function NextMonthPreview() {
           {totalLeftovers > 0 && (
             <div className="mt-4 pt-3 border-t border-[var(--border)]">
               <p className="text-xs text-[var(--text-muted)] mb-2">
-                Account Leftovers
+                {t("nextMonth.accountLeftovers")}
               </p>
               {Object.entries(nextMonthIncome.accountLeftovers)
                 .filter(([key, v]) => v > 0 && key !== "Savings")
@@ -122,7 +124,7 @@ export default function NextMonthPreview() {
 
           <div className="mt-4 pt-3 border-t border-[var(--border)] flex justify-between">
             <p className="font-medium text-[var(--text-primary)]">
-              Total Income
+              {t("nextMonth.totalIncome")}
             </p>
             <p className="font-bold text-lg text-[var(--income)]">
               €{(totalIncome + totalLeftovers).toFixed(2)}
@@ -134,7 +136,7 @@ export default function NextMonthPreview() {
             <div className="flex items-center gap-2">
               <PiggyBank size={16} className="text-[var(--saves-color)]" />
               <p className="text-sm font-medium text-[var(--saves-color)]">
-                Savings (20%)
+                {t("nextMonth.savingsPercent", { pct: "20" })}
               </p>
             </div>
             <p className="font-bold text-[var(--saves-color)]">
@@ -152,7 +154,7 @@ export default function NextMonthPreview() {
           <div className="flex items-center gap-2 mb-5">
             <ArrowDownRight size={20} className="text-[var(--expense)]" />
             <h3 className="font-medium text-[var(--text-primary)]">
-              Scheduled Payments
+              {t("nextMonth.scheduledPayments")}
             </h3>
           </div>
           <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
@@ -192,7 +194,7 @@ export default function NextMonthPreview() {
 
           <div className="mt-4 pt-3 border-t border-[var(--border)] flex justify-between">
             <p className="font-medium text-[var(--text-primary)]">
-              Total Scheduled
+              {t("nextMonth.totalScheduled")}
             </p>
             <p className="font-bold text-lg text-[var(--expense)]">
               €{totalScheduled.toFixed(2)}
@@ -209,7 +211,7 @@ export default function NextMonthPreview() {
         className="rounded-2xl border-2 border-[var(--accent-primary)] bg-[var(--bg-secondary)] p-6 text-center"
       >
         <p className="text-sm text-[var(--text-muted)] mb-1">
-          Disposable Income (after scheduled + 20% savings)
+          {t("nextMonth.disposableIncome", { pct: "20" })}
         </p>
         <p className="text-4xl font-bold text-[var(--accent-primary)]">
           €{disposable.toFixed(2)}

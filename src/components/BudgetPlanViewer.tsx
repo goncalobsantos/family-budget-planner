@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowLeft, PiggyBank, ShieldCheck, Sparkles, Target } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 import type { BudgetPlan } from "@/types/budget";
 
 interface BudgetPlanViewerProps {
@@ -15,11 +16,13 @@ export default function BudgetPlanViewer({
   name,
   onBack,
 }: BudgetPlanViewerProps) {
+  const { t, dateLocale } = useLanguage();
+
   const formatMonth = (month: string) => {
     const match = month.match(/(\d{4})-(\d{2})/);
     if (match) {
       const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1);
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString(dateLocale, {
         month: "long",
         year: "numeric",
       });
@@ -47,15 +50,16 @@ export default function BudgetPlanViewer({
           </button>
           <div>
             <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-              Budget Plan — {formatMonth(plan.month || name)}
+              {t("budgetViewer.title", { month: formatMonth(plan.month || name) })}
             </h1>
             {plan.createdAt && (
               <p className="text-sm text-[var(--text-muted)]">
-                Created{" "}
-                {new Date(plan.createdAt).toLocaleDateString("en-US", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
+                {t("budgetViewer.created", {
+                  date: new Date(plan.createdAt).toLocaleDateString(dateLocale, {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  }),
                 })}
               </p>
             )}
@@ -65,12 +69,12 @@ export default function BudgetPlanViewer({
         {/* Overview */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-6">
           <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
-            Overview
+            {t("budgetViewer.overview")}
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">
-                Total Income
+                {t("budgetViewer.totalIncome")}
               </p>
               <p className="text-xl font-bold text-[var(--income)]">
                 €{plan.totalIncome?.toFixed(2)}
@@ -78,7 +82,7 @@ export default function BudgetPlanViewer({
             </div>
             <div>
               <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">
-                Scheduled
+                {t("budgetViewer.scheduled")}
               </p>
               <p className="text-xl font-bold text-[var(--expense)]">
                 €{plan.scheduledTotal?.toFixed(2)}
@@ -86,7 +90,7 @@ export default function BudgetPlanViewer({
             </div>
             <div>
               <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">
-                Disposable
+                {t("budgetViewer.disposable")}
               </p>
               <p className="text-xl font-bold text-[var(--text-primary)]">
                 €{plan.disposableIncome?.toFixed(2)}
@@ -94,7 +98,7 @@ export default function BudgetPlanViewer({
             </div>
             <div>
               <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">
-                Savings
+                {t("common.savings")}
               </p>
               <p className="text-xl font-bold text-[var(--savings)]">
                 €{plan.allocations?.saves?.amount?.toFixed(2)}
@@ -108,7 +112,7 @@ export default function BudgetPlanViewer({
           <div className="rounded-2xl border border-[var(--needs)]/30 bg-[var(--bg-secondary)] p-5">
             <div className="flex items-center gap-2 mb-3">
               <ShieldCheck size={18} className="text-[var(--needs)]" />
-              <h3 className="font-medium text-[var(--needs)]">Needs</h3>
+              <h3 className="font-medium text-[var(--needs)]">{t("common.needs")}</h3>
               <span className="ml-auto text-sm font-bold text-[var(--text-primary)]">
                 {plan.allocations?.needs?.percentage}%
               </span>
@@ -121,7 +125,7 @@ export default function BudgetPlanViewer({
           <div className="rounded-2xl border border-[var(--wants)]/30 bg-[var(--bg-secondary)] p-5">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles size={18} className="text-[var(--wants)]" />
-              <h3 className="font-medium text-[var(--wants)]">Wants</h3>
+              <h3 className="font-medium text-[var(--wants)]">{t("common.wants")}</h3>
               <span className="ml-auto text-sm font-bold text-[var(--text-primary)]">
                 {plan.allocations?.wants?.percentage}%
               </span>
@@ -134,7 +138,7 @@ export default function BudgetPlanViewer({
           <div className="rounded-2xl border border-[var(--saves-color)]/30 bg-[var(--bg-secondary)] p-5">
             <div className="flex items-center gap-2 mb-3">
               <PiggyBank size={18} className="text-[var(--saves-color)]" />
-              <h3 className="font-medium text-[var(--saves-color)]">Saves</h3>
+              <h3 className="font-medium text-[var(--saves-color)]">{t("common.saves")}</h3>
               <span className="ml-auto text-sm font-bold text-[var(--text-primary)]">
                 {plan.allocations?.saves?.percentage}%
               </span>
@@ -152,7 +156,7 @@ export default function BudgetPlanViewer({
             {plan.categoryBreakdown.needs?.length > 0 && (
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-5">
                 <h3 className="font-medium text-[var(--needs)] mb-3">
-                  Scheduled Needs
+                  {t("budgetViewer.scheduledNeeds")}
                 </h3>
                 <div className="space-y-2">
                   {plan.categoryBreakdown.needs.map((item) => (
@@ -176,7 +180,7 @@ export default function BudgetPlanViewer({
             {plan.categoryBreakdown.wants?.length > 0 && (
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-5">
                 <h3 className="font-medium text-[var(--wants)] mb-3">
-                  Scheduled Wants
+                  {t("budgetViewer.scheduledWants")}
                 </h3>
                 <div className="space-y-2">
                   {plan.categoryBreakdown.wants.map((item) => (
@@ -202,23 +206,23 @@ export default function BudgetPlanViewer({
         {plan.accountLeftovers && (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-5">
             <h3 className="font-medium text-[var(--text-primary)] mb-3">
-              Account Carry-over
+              {t("budgetViewer.accountCarryover")}
             </h3>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Main</p>
+                <p className="text-xs text-[var(--text-muted)]">{t("budgetViewer.main")}</p>
                 <p className="text-lg font-semibold text-[var(--text-primary)]">
                   €{plan.accountLeftovers.Main?.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Coverflex</p>
+                <p className="text-xs text-[var(--text-muted)]">{t("budgetViewer.coverflex")}</p>
                 <p className="text-lg font-semibold text-[var(--text-primary)]">
                   €{plan.accountLeftovers.Coverflex?.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Savings</p>
+                <p className="text-xs text-[var(--text-muted)]">{t("budgetViewer.savingsLabel")}</p>
                 <p className="text-lg font-semibold text-[var(--text-primary)]">
                   €{plan.accountLeftovers.Savings?.toFixed(2)}
                 </p>
@@ -232,7 +236,7 @@ export default function BudgetPlanViewer({
           <div className="rounded-2xl border border-[var(--saves-color)]/30 bg-[var(--bg-secondary)] p-5">
             <div className="flex items-center gap-2 mb-3">
               <Target size={18} className="text-[var(--saves-color)]" />
-              <h3 className="font-medium text-[var(--saves-color)]">Savings Goal Allocations</h3>
+              <h3 className="font-medium text-[var(--saves-color)]">{t("budgetViewer.savingsGoalAllocations")}</h3>
             </div>
             <div className="space-y-2">
               {plan.savings.allocations.map((alloc) => (
@@ -248,7 +252,7 @@ export default function BudgetPlanViewer({
               ))}
               {plan.savings.unallocated > 0 && (
                 <div className="flex items-center justify-between py-1 text-[var(--text-muted)]">
-                  <span className="text-sm italic">Unallocated</span>
+                  <span className="text-sm italic">{t("budgetViewer.unallocated")}</span>
                   <span className="text-sm">€{plan.savings.unallocated.toFixed(2)}</span>
                 </div>
               )}
@@ -262,7 +266,7 @@ export default function BudgetPlanViewer({
             {plan.flexibleBudget.needs.categories.length > 0 && (
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-5">
                 <h3 className="font-medium text-[var(--needs)] mb-3">
-                  Flexible Needs — €{plan.flexibleBudget.needs.total.toFixed(2)}
+                  {t("budgetViewer.flexibleNeeds", { total: plan.flexibleBudget.needs.total.toFixed(2) })}
                 </h3>
                 <div className="space-y-2">
                   {plan.flexibleBudget.needs.categories.map((cat) => (
@@ -296,7 +300,7 @@ export default function BudgetPlanViewer({
             {plan.flexibleBudget.wants.categories.length > 0 && (
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-5">
                 <h3 className="font-medium text-[var(--wants)] mb-3">
-                  Flexible Wants — €{plan.flexibleBudget.wants.total.toFixed(2)}
+                  {t("budgetViewer.flexibleWants", { total: plan.flexibleBudget.wants.total.toFixed(2) })}
                 </h3>
                 <div className="space-y-2">
                   {plan.flexibleBudget.wants.categories.map((cat) => (

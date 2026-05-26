@@ -1,6 +1,7 @@
 "use client";
 
 import { useBudget } from "@/context/BudgetContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AreaChart,
   Area,
@@ -22,9 +23,10 @@ interface AccountChartProps {
   color: string;
   startValue: number;
   endValue: number;
+  dateLocale: string;
 }
 
-function AccountChart({ data, label, color, startValue, endValue }: AccountChartProps) {
+function AccountChart({ data, label, color, startValue, endValue, dateLocale }: AccountChartProps) {
   const diff = endValue - startValue;
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4">
@@ -39,7 +41,7 @@ function AccountChart({ data, label, color, startValue, endValue }: AccountChart
           </span>
         </div>
       </div>
-      <div className="h-[140px]">
+      <div className="h-[100px] sm:h-[140px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <defs>
@@ -68,7 +70,7 @@ function AccountChart({ data, label, color, startValue, endValue }: AccountChart
             <Tooltip
               formatter={(value) => [`€${Number(value).toFixed(2)}`, label]}
               labelFormatter={(l) =>
-                new Date(l).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })
+                new Date(l).toLocaleDateString(dateLocale, { day: "numeric", month: "short" })
               }
               contentStyle={{
                 backgroundColor: "var(--bg-secondary)",
@@ -98,6 +100,7 @@ function AccountChart({ data, label, color, startValue, endValue }: AccountChart
 
 export default function MoneyFlow() {
   const { data } = useBudget();
+  const { t, dateLocale } = useLanguage();
   if (!data || data.dailyBalances.length === 0) return null;
 
   const first = data.dailyBalances[0];
@@ -105,30 +108,30 @@ export default function MoneyFlow() {
 
   const accounts = [
     {
-      label: "Main Account",
+      label: t("moneyFlow.mainAccount"),
       key: "Main" as const,
       color: "var(--accent-primary)",
     },
     {
-      label: "Coverflex",
+      label: t("moneyFlow.coverflex"),
       key: "Coverflex" as const,
       color: "var(--needs)",
     },
     {
-      label: "Savings",
+      label: t("moneyFlow.savings"),
       key: "Savings" as const,
       color: "var(--savings)",
     },
   ];
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-4 sm:space-y-6 overflow-y-auto max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)]">
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-[var(--text-primary)]">
-          Money Flow
+        <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+          {t("moneyFlow.title")}
         </h2>
         <p className="text-[var(--text-muted)]">
-          How our balances moved across all accounts
+          {t("moneyFlow.subtitle")}
         </p>
       </div>
 
@@ -144,6 +147,7 @@ export default function MoneyFlow() {
             }))}
             startValue={first[account.key]}
             endValue={last[account.key]}
+            dateLocale={dateLocale}
           />
         ))}
       </div>

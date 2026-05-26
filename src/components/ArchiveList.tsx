@@ -9,6 +9,7 @@ import {
   Loader2,
   Archive,
 } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface ArchiveFile {
   name: string;
@@ -34,6 +35,7 @@ export default function ArchiveList({
   const [archives, setArchives] = useState<ArchiveData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingFile, setLoadingFile] = useState<string | null>(null);
+  const { t, dateLocale } = useLanguage();
 
   useEffect(() => {
     fetch("/api/archives")
@@ -64,11 +66,11 @@ export default function ArchiveList({
     setLoadingFile(file.filename);
     try {
       const res = await fetch(`/api/archives/read?dir=budgets&filename=${encodeURIComponent(file.filename)}`);
-      if (!res.ok) throw new Error("Failed to load budget");
+      if (!res.ok) throw new Error(t("archives.failedToLoad"));
       const plan = await res.json();
       onLoadBudget(plan, file.name);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to load file");
+      alert(e instanceof Error ? e.message : t("archives.failedToLoad"));
     } finally {
       setLoadingFile(null);
     }
@@ -78,7 +80,7 @@ export default function ArchiveList({
     return (
       <div className="flex items-center justify-center gap-2 py-8 text-[var(--text-muted)]">
         <Loader2 size={18} className="animate-spin" />
-        <span className="text-sm">Loading archives…</span>
+        <span className="text-sm">{t("archives.loadingArchives")}</span>
       </div>
     );
   }
@@ -95,7 +97,7 @@ export default function ArchiveList({
     const match = name.match(/(\d{4})-(\d{2})/);
     if (match) {
       const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1);
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString(dateLocale, {
         month: "long",
         year: "numeric",
       });
@@ -113,7 +115,7 @@ export default function ArchiveList({
       <div className="flex items-center gap-2 text-[var(--text-muted)]">
         <Archive size={18} />
         <h2 className="text-sm font-medium uppercase tracking-wider">
-          Archives
+          {t("archives.title")}
         </h2>
       </div>
 
@@ -121,7 +123,7 @@ export default function ArchiveList({
       {archives.csvFiles.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
-            Monthly Analyses
+            {t("archives.monthlyAnalyses")}
           </h3>
           <div className="grid gap-2">
             {archives.csvFiles.map((file) => (
@@ -165,7 +167,7 @@ export default function ArchiveList({
       {archives.budgetFiles.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
-            Budget Plans
+            {t("archives.budgetPlans")}
           </h3>
           <div className="grid gap-2">
             {archives.budgetFiles.map((file) => (
@@ -195,7 +197,7 @@ export default function ArchiveList({
                     {formatMonth(file.name)}
                   </p>
                   <p className="text-xs text-[var(--text-muted)]">
-                    Budget Plan
+                    {t("archives.budgetPlan")}
                   </p>
                 </div>
                 <Calendar size={14} className="text-[var(--text-muted)]" />

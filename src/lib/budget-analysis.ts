@@ -4,6 +4,7 @@ import type {
   BudgetVsActualLine,
   WalletRecord,
 } from "@/types/budget";
+import type { TranslationKey } from "@/i18n/translations";
 import { getPeriodRecords } from "./data-processor";
 
 /**
@@ -104,7 +105,8 @@ function findActualForCategory(
 export function buildBudgetAnalysis(
   plan: BudgetPlan,
   records: WalletRecord[],
-  dateRange: { start: string; end: string }
+  dateRange: { start: string; end: string },
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string
 ): BudgetAnalysis {
   const periodDays = daysBetween(dateRange.start, dateRange.end);
   const monthDays = daysInMonth(plan.month);
@@ -197,18 +199,18 @@ export function buildBudgetAnalysis(
       if (line.actual > 0) {
         const savedAmt = line.budgeted - line.actual;
         wins.push(
-          `${line.category}: saved €${savedAmt.toFixed(2)} (used ${line.percentUsed}%)`
+          t("analysis.categorySaved", { category: line.category, amount: savedAmt.toFixed(2), percent: line.percentUsed })
         );
       }
     } else if (line.actual > line.budgeted) {
       const overAmt = line.actual - line.budgeted;
       if (line.budgeted > 0) {
         overages.push(
-          `${line.category}: over by €${overAmt.toFixed(2)} (${line.percentUsed}% of budget)`
+          t("analysis.categoryOverBy", { category: line.category, amount: overAmt.toFixed(2), percent: line.percentUsed })
         );
       } else {
         overages.push(
-          `${line.category}: €${line.actual.toFixed(2)} unplanned spending`
+          t("analysis.categoryUnplanned", { category: line.category, amount: line.actual.toFixed(2) })
         );
       }
     }
@@ -217,12 +219,12 @@ export function buildBudgetAnalysis(
   // Partial period warnings
   if (isPartial) {
     warnings.push(
-      `This CSV covers only ${periodDays} of ${monthDays} days (${coveragePct}% of the month). Actuals may be incomplete.`
+      t("analysis.partialWarning", { days: periodDays, totalDays: monthDays, pct: coveragePct })
     );
     const projectedExpenses = actualExpenses * (monthDays / periodDays);
     if (projectedExpenses > totalBudgetedExpenses * 1.1) {
       warnings.push(
-        `At this pace, projected monthly expenses would be €${projectedExpenses.toFixed(0)} vs €${totalBudgetedExpenses.toFixed(0)} budgeted.`
+        t("analysis.projectedWarning", { projected: projectedExpenses.toFixed(0), budgeted: totalBudgetedExpenses.toFixed(0) })
       );
     }
   }
@@ -230,7 +232,7 @@ export function buildBudgetAnalysis(
   // Income warning
   if (actual.Income < plan.totalIncome * 0.9 && !isPartial) {
     warnings.push(
-      `Actual income €${actual.Income.toFixed(2)} was ${Math.round(((plan.totalIncome - actual.Income) / plan.totalIncome) * 100)}% below expected €${plan.totalIncome.toFixed(2)}.`
+      t("analysis.incomeWarning", { actual: actual.Income.toFixed(2), percent: Math.round(((plan.totalIncome - actual.Income) / plan.totalIncome) * 100), expected: plan.totalIncome.toFixed(2) })
     );
   }
 
@@ -239,7 +241,7 @@ export function buildBudgetAnalysis(
   const savedTarget = plan.allocations.saves.amount;
   if (savedActual < savedTarget * 0.5 && !isPartial) {
     warnings.push(
-      `Only €${savedActual.toFixed(2)} saved vs €${savedTarget.toFixed(2)} target (${Math.round((savedActual / savedTarget) * 100)}%).`
+      t("analysis.savingsWarning", { actual: savedActual.toFixed(2), target: savedTarget.toFixed(2), percent: Math.round((savedActual / savedTarget) * 100) })
     );
   }
 

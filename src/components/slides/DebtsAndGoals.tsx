@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Shield, Plane, Car, Target, TrendingDown } from "lucide-react";
 import { useBudget } from "@/context/BudgetContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Shield,
@@ -13,18 +14,19 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
 
 export default function DebtsAndGoals() {
   const { data } = useBudget();
+  const { t, dateLocale } = useLanguage();
   if (!data) return null;
 
   const { debts, goals } = data;
 
   return (
-    <div className="w-full space-y-8 overflow-y-auto max-h-[calc(100vh-120px)] pr-2">
+    <div className="w-full space-y-5 sm:space-y-8 overflow-y-auto max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)] pr-1 sm:pr-2">
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-[var(--text-primary)]">
-          Debts &amp; Goals
+        <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+          {t("debtsGoals.title")}
         </h2>
         <p className="text-[var(--text-muted)]">
-          Tracking our financial journey
+          {t("debtsGoals.subtitle")}
         </p>
       </div>
 
@@ -33,7 +35,7 @@ export default function DebtsAndGoals() {
         <div className="flex items-center gap-2 mb-4">
           <TrendingDown size={20} className="text-[var(--expense)]" />
           <h3 className="text-xl font-semibold text-[var(--text-primary)]">
-            Debts
+            {t("debtsGoals.debts")}
           </h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -60,7 +62,7 @@ export default function DebtsAndGoals() {
                   </div>
                   {debt.paymentsThisMonth > 0 && (
                     <span className="text-xs px-2 py-1 rounded-full bg-[var(--income)]/15 text-[var(--income)]">
-                      -€{debt.paymentsThisMonth.toFixed(2)} this month
+                      {t("debtsGoals.thisMonth", { amount: debt.paymentsThisMonth.toFixed(2) })}
                     </span>
                   )}
                 </div>
@@ -77,7 +79,7 @@ export default function DebtsAndGoals() {
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-[var(--text-muted)]">
-                    €{paid.toFixed(2)} paid / €{debt.totalOwed.toLocaleString()} total
+                    {t("debtsGoals.paidTotal", { paid: paid.toFixed(2), total: debt.totalOwed.toLocaleString() })}
                   </span>
                   <span className="text-[var(--text-secondary)]">
                     {progress.toFixed(1)}%
@@ -85,7 +87,7 @@ export default function DebtsAndGoals() {
                 </div>
 
                 <div className="mt-3 pt-3 border-t border-[var(--border)] text-xs text-[var(--text-muted)]">
-                  <span>Remaining: €{debt.remaining.toFixed(2)}</span>
+                  <span>{t("debtsGoals.remaining", { amount: debt.remaining.toFixed(2) })}</span>
                 </div>
               </motion.div>
             );
@@ -98,7 +100,7 @@ export default function DebtsAndGoals() {
         <div className="flex items-center gap-2 mb-4">
           <Target size={20} className="text-[var(--income)]" />
           <h3 className="text-xl font-semibold text-[var(--text-primary)]">
-            Financial Goals
+            {t("debtsGoals.financialGoals")}
           </h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -159,16 +161,16 @@ export default function DebtsAndGoals() {
 
                 <div className="pt-3 border-t border-[var(--border)] space-y-1 text-xs text-[var(--text-muted)]">
                   <div className="flex justify-between">
-                    <span>Deadline</span>
+                    <span>{t("debtsGoals.deadline")}</span>
                     <span>
-                      {deadline.toLocaleDateString("pt-PT", {
+                      {deadline.toLocaleDateString(dateLocale, {
                         month: "short",
                         year: "numeric",
                       })}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Monthly needed</span>
+                    <span>{t("debtsGoals.monthlyNeeded")}</span>
                     <span className="text-[var(--text-secondary)]">
                       €{monthlySavingsNeeded.toFixed(2)}
                     </span>

@@ -18,6 +18,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useBudget } from "@/context/BudgetContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import type { BudgetPlan, BudgetPlanCategory, BudgetPlanSubcategory, SavingsAllocation } from "@/types/budget";
 
 export default function BudgetPlanner() {
@@ -89,6 +90,7 @@ export default function BudgetPlanner() {
   if (!data) return null;
 
   const { nextMonthIncome, scheduledTransfers, goals } = data;
+  const { t } = useLanguage();
 
   // ── Income calculations ──
   const incomeFromSources = nextMonthIncome.sources.reduce((s, src) => s + src.amount, 0);
@@ -414,14 +416,14 @@ export default function BudgetPlanner() {
   };
 
   return (
-    <div className="w-full space-y-5 overflow-y-auto max-h-[calc(100vh-120px)] pr-2">
+    <div className="w-full space-y-4 sm:space-y-5 overflow-y-auto max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)] pr-1 sm:pr-2">
       {/* Header */}
       <div className="text-center space-y-1">
-        <h2 className="text-3xl font-bold text-[var(--text-primary)]">
-          Budget Planning
+        <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+          {t("planner.title")}
         </h2>
         <p className="text-[var(--text-muted)] text-sm">
-          Plan every euro — Income: €{totalIncome.toFixed(2)}
+          {t("planner.subtitle", { income: totalIncome.toFixed(2) })}
         </p>
       </div>
 
@@ -438,10 +440,10 @@ export default function BudgetPlanner() {
             )}
             <span className={`text-sm font-medium ${overBudget ? "text-[var(--expense)]" : allMoneyAssigned ? "text-[var(--income)]" : "text-[var(--text-secondary)]"}`}>
               {overBudget
-                ? `Over budget by €${(totalAllocated - totalIncome).toFixed(2)}`
+                ? t("planner.overBudget", { amount: (totalAllocated - totalIncome).toFixed(2) })
                 : allMoneyAssigned
-                  ? "Every euro has a job!"
-                  : `€${(totalIncome - totalAllocated).toFixed(2)} unassigned`}
+                  ? t("planner.allAssigned")
+                  : t("planner.unassigned", { amount: (totalIncome - totalAllocated).toFixed(2) })}
             </span>
           </div>
           <span className="text-xs text-[var(--text-muted)]">
@@ -474,21 +476,21 @@ export default function BudgetPlanner() {
       </div>
 
       {/* Money Flow Summary */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Income</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("common.income")}</p>
           <p className="text-lg font-bold text-[var(--income)]">€{totalIncome.toFixed(2)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Needs</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("common.needs")}</p>
           <p className="text-lg font-bold text-[var(--needs)]">€{needsTotal.toFixed(2)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Savings</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("common.savings")}</p>
           <p className="text-lg font-bold text-[var(--saves-color)]">€{savingsAmount.toFixed(2)}</p>
         </div>
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-3 text-center">
-          <p className="text-xs text-[var(--text-muted)]">Wants</p>
+          <p className="text-xs text-[var(--text-muted)]">{t("common.wants")}</p>
           <p className="text-lg font-bold text-[var(--wants)]">€{wantsTotal.toFixed(2)}</p>
         </div>
       </div>
@@ -498,7 +500,7 @@ export default function BudgetPlanner() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <PiggyBank size={18} className="text-[var(--saves-color)]" />
-            <h3 className="font-medium text-[var(--saves-color)]">Savings — {savesPct.toFixed(2)}%</h3>
+            <h3 className="font-medium text-[var(--saves-color)]">{t("common.savings")} — {savesPct.toFixed(2)}%</h3>
           </div>
           <EditableAmount field="saves" amount={savingsAmount} color="var(--saves-color)" />
         </div>
@@ -520,10 +522,10 @@ export default function BudgetPlanner() {
           <div className="mt-3 pt-3 border-t border-[var(--border)]">
             <div className="flex items-center gap-2 mb-2">
               <Target size={14} className="text-[var(--saves-color)]" />
-              <span className="text-xs font-medium text-[var(--text-muted)]">Allocate to goals</span>
+              <span className="text-xs font-medium text-[var(--text-muted)]">{t("planner.allocateToGoals")}</span>
               {unallocatedSavings > 0 && (
                 <span className="ml-auto text-xs text-[var(--text-muted)]">
-                  €{unallocatedSavings.toFixed(2)} unallocated
+                  {t("planner.unallocated", { amount: unallocatedSavings.toFixed(2) })}
                 </span>
               )}
             </div>
@@ -554,7 +556,7 @@ export default function BudgetPlanner() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Lock size={16} className="text-[var(--needs)]" />
-              <h3 className="font-medium text-[var(--needs)]">Needs</h3>
+              <h3 className="font-medium text-[var(--needs)]">{t("common.needs")}</h3>
             </div>
             <span className="text-sm font-bold text-[var(--text-primary)]">
               €{needsTotal.toFixed(2)}
@@ -639,7 +641,7 @@ export default function BudgetPlanner() {
                               if (e.key === "Enter") addSubcategory("needs", cat.id);
                               if (e.key === "Escape") cancelAddSubcategory();
                             }}
-                            placeholder="Subcategory..."
+                            placeholder={t("planner.subcategoryPlaceholder")}
                             autoFocus
                             className="text-xs bg-transparent border-b border-[var(--needs)]/50 outline-none flex-1 text-[var(--text-primary)]"
                           />
@@ -655,7 +657,7 @@ export default function BudgetPlanner() {
                           onClick={() => { setAddingSubTo(cat.id); setNewSubcategoryName(""); }}
                           className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] hover:text-[var(--needs)] transition-colors mt-0.5"
                         >
-                          <Plus size={10} /> subcategory
+                          <Plus size={10} /> {t("planner.subcategory")}
                         </button>
                       )}
                     </div>
@@ -691,7 +693,7 @@ export default function BudgetPlanner() {
                 autoFocus
                 className="text-sm bg-[var(--bg-primary)] border border-[var(--needs)]/50 rounded-lg px-2 py-1 outline-none flex-1 text-[var(--text-primary)]"
               >
-                <option value="">Select a category...</option>
+                <option value="">{t("planner.selectCategory")}</option>
                 {availableCategories.map((name) => (
                   <option key={name} value={name}>{name}</option>
                 ))}
@@ -705,7 +707,7 @@ export default function BudgetPlanner() {
               onClick={() => setAddingTo("needs")}
               className="mt-2 flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--needs)] transition-colors"
             >
-              <Plus size={12} /> Add category
+              <Plus size={12} /> {t("planner.addCategory")}
             </button>
           )}
         </div>
@@ -715,7 +717,7 @@ export default function BudgetPlanner() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Unlock size={16} className="text-[var(--wants)]" />
-              <h3 className="font-medium text-[var(--wants)]">Wants</h3>
+              <h3 className="font-medium text-[var(--wants)]">{t("common.wants")}</h3>
             </div>
             <span className="text-sm font-bold text-[var(--text-primary)]">
               €{wantsTotal.toFixed(2)}
@@ -800,7 +802,7 @@ export default function BudgetPlanner() {
                               if (e.key === "Enter") addSubcategory("wants", cat.id);
                               if (e.key === "Escape") cancelAddSubcategory();
                             }}
-                            placeholder="Subcategory..."
+                            placeholder={t("planner.subcategoryPlaceholder")}
                             autoFocus
                             className="text-xs bg-transparent border-b border-[var(--wants)]/50 outline-none flex-1 text-[var(--text-primary)]"
                           />
@@ -816,7 +818,7 @@ export default function BudgetPlanner() {
                           onClick={() => { setAddingSubTo(cat.id); setNewSubcategoryName(""); }}
                           className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] hover:text-[var(--wants)] transition-colors mt-0.5"
                         >
-                          <Plus size={10} /> subcategory
+                          <Plus size={10} /> {t("planner.subcategory")}
                         </button>
                       )}
                     </div>
@@ -851,7 +853,7 @@ export default function BudgetPlanner() {
                 autoFocus
                 className="text-sm bg-[var(--bg-primary)] border border-[var(--wants)]/50 rounded-lg px-2 py-1 outline-none flex-1 text-[var(--text-primary)]"
               >
-                <option value="">Select a category...</option>
+                <option value="">{t("planner.selectCategory")}</option>
                 {availableCategories.map((name) => (
                   <option key={name} value={name}>{name}</option>
                 ))}
@@ -865,7 +867,7 @@ export default function BudgetPlanner() {
               onClick={() => setAddingTo("wants")}
               className="mt-2 flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--wants)] transition-colors"
             >
-              <Plus size={12} /> Add category
+              <Plus size={12} /> {t("planner.addCategory")}
             </button>
           )}
         </div>
@@ -890,22 +892,22 @@ export default function BudgetPlanner() {
         {exported ? (
           <>
             <Check size={20} />
-            Plan Saved & Exported!
+            {t("planner.planSaved")}
           </>
         ) : saving ? (
           <>
             <Download size={20} />
-            Saving…
+            {t("planner.savingPlan")}
           </>
         ) : overBudget ? (
           <>
             <AlertTriangle size={20} />
-            Fix over-budget before saving
+            {t("planner.fixOverBudget")}
           </>
         ) : (
           <>
             <Download size={20} />
-            Save Budget Plan
+            {t("planner.saveBudgetPlan")}
           </>
         )}
       </motion.button>

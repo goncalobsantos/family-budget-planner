@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useBudget } from "@/context/BudgetContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   PieChart,
   Pie,
@@ -29,6 +30,7 @@ const COLORS = [
 
 export default function ExtraInfoBreakdown() {
   const { data } = useBudget();
+  const { t } = useLanguage();
   const [selected, setSelected] = useState<CategoryTotal | null>(null);
 
   if (!data) return null;
@@ -41,26 +43,26 @@ export default function ExtraInfoBreakdown() {
   const total = data.extraInfoBreakdown.reduce((s, c) => s + c.total, 0);
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-4 sm:space-y-6 overflow-y-auto max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)]">
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-[var(--text-primary)]">
-          Personal Categories
+        <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+          {t("extraInfo.title")}
         </h2>
         <p className="text-[var(--text-muted)]">
-          A deeper look at where we spent · Total: €{total.toFixed(2)}
+          {t("extraInfo.subtitle", { total: total.toFixed(2) })}
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-center">
-        <div className="w-full lg:w-1/2 h-[380px]">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-8 items-center">
+        <div className="w-full lg:w-1/2 h-[250px] sm:h-[380px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={80}
-                outerRadius={150}
+                innerRadius="45%"
+                outerRadius="85%"
                 paddingAngle={2}
                 dataKey="value"
                 cursor="pointer"
